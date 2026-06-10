@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
-import { base44 } from "@/api/base44Client";
+import { client } from "@/api/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -40,12 +40,12 @@ export default function CreateMatch() {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const isAuth = await base44.auth.isAuthenticated();
+      const isAuth = await client.auth.isAuthenticated();
       if (!isAuth) {
-        base44.auth.redirectToLogin();
+        client.auth.redirectToLogin();
         return;
       }
-      const currentUser = await base44.auth.me();
+      const currentUser = await client.auth.me();
       setUser(currentUser);
     };
     checkAuth();
@@ -59,7 +59,7 @@ export default function CreateMatch() {
     queryKey: ['currentGame', selectedGameId],
     queryFn: async () => {
       if (!selectedGameId) return null;
-      const allGames = await base44.entities.Game.list();
+      const allGames = await client.entities.Game.list();
       return allGames.find(g => g.id === selectedGameId) || null;
     },
     enabled: !!selectedGameId
@@ -69,7 +69,7 @@ export default function CreateMatch() {
     queryKey: ['players', selectedGameId],
     queryFn: async () => {
       if (!selectedGameId) return [];
-      const allPlayers = await base44.entities.Player.list('name');
+      const allPlayers = await client.entities.Player.list('name');
       return allPlayers.filter(p => p.game_ids && p.game_ids.includes(selectedGameId));
     },
     enabled: !!selectedGameId
@@ -78,7 +78,7 @@ export default function CreateMatch() {
   const { data: editingMatch } = useQuery({
     queryKey: ['editMatch', editMatchId],
     queryFn: async () => {
-      const matches = await base44.entities.Match.list();
+      const matches = await client.entities.Match.list();
       return matches.find(m => m.id === editMatchId);
     },
     enabled: !!editMatchId
@@ -88,7 +88,7 @@ export default function CreateMatch() {
     queryKey: ['lastMatch', selectedGameId],
     queryFn: async () => {
       if (!selectedGameId) return null;
-      const matches = await base44.entities.Match.filter({ game_id: selectedGameId }, '-created_date', 1);
+      const matches = await client.entities.Match.filter({ game_id: selectedGameId }, '-created_date', 1);
       return matches[0] || null;
     },
     enabled: !!selectedGameId && !editMatchId
@@ -152,10 +152,10 @@ export default function CreateMatch() {
       };
       
       if (editMatchId) {
-        const match = await base44.entities.Match.update(editMatchId, matchData);
+        const match = await client.entities.Match.update(editMatchId, matchData);
         return match;
       } else {
-        const match = await base44.entities.Match.create(matchData);
+        const match = await client.entities.Match.create(matchData);
         return match;
       }
     },

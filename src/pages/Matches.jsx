@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { client } from "@/api/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,12 +23,12 @@ export default function Matches() {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const isAuth = await base44.auth.isAuthenticated();
+      const isAuth = await client.auth.isAuthenticated();
       if (!isAuth) {
-        base44.auth.redirectToLogin();
+        client.auth.redirectToLogin();
         return;
       }
-      const currentUser = await base44.auth.me();
+      const currentUser = await client.auth.me();
       setUser(currentUser);
     };
     checkAuth();
@@ -38,7 +38,7 @@ export default function Matches() {
     queryKey: ['currentGame', selectedGameId],
     queryFn: async () => {
       if (!selectedGameId) return null;
-      const allGames = await base44.entities.Game.list();
+      const allGames = await client.entities.Game.list();
       return allGames.find(g => g.id === selectedGameId) || null;
     },
     enabled: !!selectedGameId
@@ -48,13 +48,13 @@ export default function Matches() {
     queryKey: ['matches', selectedGameId],
     queryFn: async () => {
       if (!selectedGameId) return [];
-      return await base44.entities.Match.filter({ game_id: selectedGameId }, '-created_date');
+      return await client.entities.Match.filter({ game_id: selectedGameId }, '-created_date');
     },
     enabled: !!selectedGameId
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.Match.delete(id),
+    mutationFn: (id) => client.entities.Match.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['matches'] });
     }

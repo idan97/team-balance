@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { client } from "@/api/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,12 +27,12 @@ export default function Games() {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const isAuth = await base44.auth.isAuthenticated();
+      const isAuth = await client.auth.isAuthenticated();
       if (!isAuth) {
-        base44.auth.redirectToLogin();
+        client.auth.redirectToLogin();
         return;
       }
-      const currentUser = await base44.auth.me();
+      const currentUser = await client.auth.me();
       setUser(currentUser);
     };
     checkAuth();
@@ -42,7 +42,7 @@ export default function Games() {
     queryKey: ['myGames', user?.email],
     queryFn: async () => {
       if (!user) return [];
-      return await base44.entities.Game.filter({ created_by: user.email }, '-created_date');
+      return await client.entities.Game.filter({ created_by: user.email }, '-created_date');
     },
     enabled: !!user
   });
@@ -51,7 +51,7 @@ export default function Games() {
     queryKey: ['sharedGames', user?.email],
     queryFn: async () => {
       if (!user) return [];
-      const allGames = await base44.entities.Game.list('-created_date');
+      const allGames = await client.entities.Game.list('-created_date');
       return allGames.filter(game => 
         game.shared_with_emails && game.shared_with_emails.includes(user.email)
       );
@@ -60,7 +60,7 @@ export default function Games() {
   });
 
   const createMutation = useMutation({
-    mutationFn: (data) => base44.entities.Game.create(data),
+    mutationFn: (data) => client.entities.Game.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['myGames'] });
       setShowForm(false);
@@ -69,7 +69,7 @@ export default function Games() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.Game.update(id, data),
+    mutationFn: ({ id, data }) => client.entities.Game.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['myGames'] });
       queryClient.invalidateQueries({ queryKey: ['sharedGames'] });
@@ -79,7 +79,7 @@ export default function Games() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.Game.delete(id),
+    mutationFn: (id) => client.entities.Game.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['myGames'] });
     }

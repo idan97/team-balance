@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { client } from "@/api/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,12 +21,12 @@ export default function ImportPlayers() {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const isAuth = await base44.auth.isAuthenticated();
+      const isAuth = await client.auth.isAuthenticated();
       if (!isAuth) {
-        base44.auth.redirectToLogin();
+        client.auth.redirectToLogin();
         return;
       }
-      const currentUser = await base44.auth.me();
+      const currentUser = await client.auth.me();
       setUser(currentUser);
     };
     checkAuth();
@@ -37,12 +37,12 @@ export default function ImportPlayers() {
       setStatus({ type: 'loading', message: 'Uploading file...' });
       
       // Upload file
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      const { file_url } = await client.integrations.Core.UploadFile({ file });
       
       setStatus({ type: 'loading', message: 'Extracting player data...' });
       
       // Extract data with schema
-      const result = await base44.integrations.Core.ExtractDataFromUploadedFile({
+      const result = await client.integrations.Core.ExtractDataFromUploadedFile({
         file_url: file_url,
         json_schema: {
           type: "object",
@@ -80,7 +80,7 @@ export default function ImportPlayers() {
       setStatus({ type: 'loading', message: `Creating game with ${playersData.length} players...` });
 
       // Create game
-      const game = await base44.entities.Game.create({
+      const game = await client.entities.Game.create({
         name: gameName || `Imported Game ${new Date().toLocaleDateString()}`
       });
 
@@ -94,7 +94,7 @@ export default function ImportPlayers() {
       }));
 
       // Bulk create players
-      await base44.entities.Player.bulkCreate(playersToCreate);
+      await client.entities.Player.bulkCreate(playersToCreate);
 
       // Set as selected game
       localStorage.setItem('selectedGameId', game.id);

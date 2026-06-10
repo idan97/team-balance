@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { client } from "@/api/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -58,12 +58,12 @@ export default function Players() {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const isAuth = await base44.auth.isAuthenticated();
+      const isAuth = await client.auth.isAuthenticated();
       if (!isAuth) {
-        base44.auth.redirectToLogin();
+        client.auth.redirectToLogin();
         return;
       }
-      const currentUser = await base44.auth.me();
+      const currentUser = await client.auth.me();
       setUser(currentUser);
     };
     checkAuth();
@@ -73,7 +73,7 @@ export default function Players() {
     queryKey: ['currentGame', selectedGameId],
     queryFn: async () => {
       if (!selectedGameId) return null;
-      const allGames = await base44.entities.Game.list();
+      const allGames = await client.entities.Game.list();
       return allGames.find(g => g.id === selectedGameId) || null;
     },
     enabled: !!selectedGameId
@@ -83,14 +83,14 @@ export default function Players() {
     queryKey: ['players', selectedGameId],
     queryFn: async () => {
       if (!selectedGameId) return [];
-      const allPlayers = await base44.entities.Player.list('-created_date');
+      const allPlayers = await client.entities.Player.list('-created_date');
       return allPlayers.filter(p => p.game_ids && p.game_ids.includes(selectedGameId));
     },
     enabled: !!selectedGameId
   });
 
   const createMutation = useMutation({
-    mutationFn: (data) => base44.entities.Player.create({ 
+    mutationFn: (data) => client.entities.Player.create({ 
       ...data, 
       game_ids: [selectedGameId] 
     }),
@@ -102,7 +102,7 @@ export default function Players() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.Player.update(id, data),
+    mutationFn: ({ id, data }) => client.entities.Player.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['players'] });
       setEditingId(null);
@@ -111,7 +111,7 @@ export default function Players() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.Player.delete(id),
+    mutationFn: (id) => client.entities.Player.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['players'] });
     }

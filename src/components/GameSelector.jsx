@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { base44 } from "@/api/base44Client";
+import { client } from "@/api/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, ChevronDown, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -37,7 +37,7 @@ export default function GameSelector({ currentGame, onGameChange }) {
   useEffect(() => {
     const loadUser = async () => {
       try {
-        const currentUser = await base44.auth.me();
+        const currentUser = await client.auth.me();
         setUser(currentUser);
       } catch (e) {}
     };
@@ -48,7 +48,7 @@ export default function GameSelector({ currentGame, onGameChange }) {
     queryKey: ['myGames', user?.email],
     queryFn: async () => {
       if (!user) return [];
-      return await base44.entities.Game.filter({ created_by: user.email }, '-created_date');
+      return await client.entities.Game.filter({ created_by: user.email }, '-created_date');
     },
     enabled: !!user
   });
@@ -57,7 +57,7 @@ export default function GameSelector({ currentGame, onGameChange }) {
     queryKey: ['sharedGames', user?.email],
     queryFn: async () => {
       if (!user) return [];
-      const allGames = await base44.entities.Game.list('-created_date');
+      const allGames = await client.entities.Game.list('-created_date');
       return allGames.filter(game => 
         game.shared_with_emails && game.shared_with_emails.includes(user.email)
       );
@@ -66,7 +66,7 @@ export default function GameSelector({ currentGame, onGameChange }) {
   });
 
   const createMutation = useMutation({
-    mutationFn: (data) => base44.entities.Game.create(data),
+    mutationFn: (data) => client.entities.Game.create(data),
     onSuccess: (newGame) => {
       queryClient.invalidateQueries({ queryKey: ['myGames'] });
       setShowCreateDialog(false);
@@ -76,7 +76,7 @@ export default function GameSelector({ currentGame, onGameChange }) {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.Game.update(id, data),
+    mutationFn: ({ id, data }) => client.entities.Game.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['myGames'] });
       queryClient.invalidateQueries({ queryKey: ['sharedGames'] });

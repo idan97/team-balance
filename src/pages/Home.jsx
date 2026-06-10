@@ -5,7 +5,7 @@ import { Trophy, Users, Zap, Target, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { base44 } from "@/api/base44Client";
+import { client } from "@/api/client";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import GameSelector from "../components/GameSelector";
 
@@ -16,12 +16,12 @@ export default function Home() {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const isAuth = await base44.auth.isAuthenticated();
+      const isAuth = await client.auth.isAuthenticated();
       if (!isAuth) {
-        base44.auth.redirectToLogin();
+        client.auth.redirectToLogin();
         return;
       }
-      const currentUser = await base44.auth.me();
+      const currentUser = await client.auth.me();
       setUser(currentUser);
     };
     checkAuth();
@@ -32,8 +32,8 @@ export default function Home() {
     queryKey: ['allGames', user?.email],
     queryFn: async () => {
       if (!user) return [];
-      const myGames = await base44.entities.Game.filter({ created_by: user.email });
-      const allGames = await base44.entities.Game.list();
+      const myGames = await client.entities.Game.filter({ created_by: user.email });
+      const allGames = await client.entities.Game.list();
       const sharedGames = allGames.filter(g => 
         g.shared_with_emails && g.shared_with_emails.includes(user.email)
       );
@@ -44,7 +44,7 @@ export default function Home() {
 
   const createDefaultGameMutation = useMutation({
     mutationFn: async () => {
-      const defaultGame = await base44.entities.Game.create({
+      const defaultGame = await client.entities.Game.create({
         name: "Default Game",
         max_stars: 7,
         description: "Your default game"
@@ -61,11 +61,11 @@ export default function Home() {
   // Migrate orphaned players to default game
   const migratePlayersMutation = useMutation({
     mutationFn: async (gameId) => {
-      const allPlayers = await base44.entities.Player.list();
+      const allPlayers = await client.entities.Player.list();
       const orphanedPlayers = allPlayers.filter(p => !p.game_ids || p.game_ids.length === 0);
       
       for (const player of orphanedPlayers) {
-        await base44.entities.Player.update(player.id, { game_ids: [gameId] });
+        await client.entities.Player.update(player.id, { game_ids: [gameId] });
       }
     }
   });
@@ -87,7 +87,7 @@ export default function Home() {
     queryKey: ['currentGame', selectedGameId],
     queryFn: async () => {
       if (!selectedGameId) return null;
-      const allGames = await base44.entities.Game.list();
+      const allGames = await client.entities.Game.list();
       return allGames.find(g => g.id === selectedGameId) || null;
     },
     enabled: !!selectedGameId

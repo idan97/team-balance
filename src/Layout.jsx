@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Home, Users, Trophy, Menu, LogOut } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { client } from "@/api/client";
 import {
   Sidebar,
   SidebarContent,
@@ -43,7 +43,7 @@ export default function Layout({ children, currentPageName }) {
   useEffect(() => {
     const loadUser = async () => {
       try {
-        const currentUser = await base44.auth.me();
+        const currentUser = await client.auth.me();
         setUser(currentUser);
       } catch (e) {
         // User not logged in
@@ -53,7 +53,7 @@ export default function Layout({ children, currentPageName }) {
   }, []);
 
   const handleLogout = () => {
-    base44.auth.logout();
+    client.auth.logout();
   };
 
   return (

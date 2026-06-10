@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { client } from "@/api/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -22,12 +22,12 @@ export default function ViewMatch() {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const isAuth = await base44.auth.isAuthenticated();
+      const isAuth = await client.auth.isAuthenticated();
       if (!isAuth) {
-        base44.auth.redirectToLogin();
+        client.auth.redirectToLogin();
         return;
       }
-      const currentUser = await base44.auth.me();
+      const currentUser = await client.auth.me();
       setUser(currentUser);
     };
     checkAuth();
@@ -36,7 +36,7 @@ export default function ViewMatch() {
   const { data: match, isLoading } = useQuery({
     queryKey: ['match', matchId],
     queryFn: async () => {
-      const matches = await base44.entities.Match.list();
+      const matches = await client.entities.Match.list();
       return matches.find(m => m.id === matchId);
     },
     enabled: !!matchId && !!user
@@ -50,7 +50,7 @@ export default function ViewMatch() {
 
   const updateMutation = useMutation({
     mutationFn: async (updatedTeams) => {
-      await base44.entities.Match.update(matchId, {
+      await client.entities.Match.update(matchId, {
         generated_teams: updatedTeams
       });
     },

@@ -6,11 +6,12 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { client } from "@/api/client";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import GameSelector from "../components/GameSelector";
 
 export default function Home() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [user, setUser] = useState(null);
   const [selectedGameId, setSelectedGameId] = useState(localStorage.getItem('selectedGameId'));
 
@@ -54,7 +55,8 @@ export default function Home() {
     onSuccess: (newGame) => {
       localStorage.setItem('selectedGameId', newGame.id);
       setSelectedGameId(newGame.id);
-      window.location.reload();
+      queryClient.invalidateQueries({ queryKey: ['allGames'] });
+      queryClient.invalidateQueries({ queryKey: ['currentGame'] });
     }
   });
 

@@ -30,7 +30,8 @@ function applySort(query, sort) {
 
 async function currentUserEmail() {
   const { data } = await supabase.auth.getSession();
-  return data.session?.user?.email ?? null;
+  if (!data.session) throw new Error('Not authenticated');
+  return data.session.user.email;
 }
 
 function makeEntity(entityName) {
@@ -152,9 +153,10 @@ let uploadCounter = 0;
 
 const POSITION_ALIASES = {
   gk: 'goalkeeper', goalkeeper: 'goalkeeper', goalie: 'goalkeeper',
+  cb: 'cb',
   d: 'defender', def: 'defender', defender: 'defender', defense: 'defender', back: 'defender',
   m: 'midfielder', mid: 'midfielder', midfielder: 'midfielder', midfield: 'midfielder',
-  s: 'striker', st: 'striker', striker: 'striker', forward: 'striker', attacker: 'striker', fw: 'striker',
+  s: 'striker', st: 'striker', str: 'striker', striker: 'striker', forward: 'striker', attacker: 'striker', fw: 'striker',
 };
 
 const normalizePosition = (raw) => POSITION_ALIASES[String(raw).trim().toLowerCase()] || null;
@@ -219,14 +221,16 @@ const integrations = {
           details: `Could not parse file as CSV: ${parsed.errors[0].message}`,
         };
       }
-      const players = parsed.data.map(rowToPlayer).filter(Boolean);
+      const allRows = parsed.data;
+      const players = allRows.map(rowToPlayer).filter(Boolean);
+      const skipped = allRows.length - players.length;
       if (players.length === 0) {
         return {
           status: 'error',
           details: 'No players found. The CSV needs a "name" column, plus optional "skill_rating" and "positions" columns.',
         };
       }
-      return { status: 'success', output: { players } };
+      return { status: 'success', output: { players }, skipped };
     },
   },
 };

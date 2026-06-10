@@ -77,7 +77,8 @@ export default function ImportPlayers() {
       }
 
       setExtractedData(playersData);
-      setStatus({ type: 'loading', message: `Creating game with ${playersData.length} players...` });
+      const skipped = result.skipped || 0;
+      setStatus({ type: 'loading', message: `Creating game with ${playersData.length} players${skipped > 0 ? ` (${skipped} rows skipped — missing name)` : ''}...` });
 
       // Create game
       const game = await client.entities.Game.create({
@@ -99,14 +100,15 @@ export default function ImportPlayers() {
       // Set as selected game
       localStorage.setItem('selectedGameId', game.id);
 
-      return { game, playersCount: playersData.length };
+      return { game, playersCount: playersData.length, skipped: result.skipped || 0 };
     },
-    onSuccess: ({ game, playersCount }) => {
+    onSuccess: ({ game, playersCount, skipped }) => {
       queryClient.invalidateQueries({ queryKey: ['games'] });
       queryClient.invalidateQueries({ queryKey: ['players'] });
-      setStatus({ 
-        type: 'success', 
-        message: `Successfully created game "${game.name}" with ${playersCount} players!` 
+      const skippedNote = skipped > 0 ? ` (${skipped} rows skipped — missing name)` : '';
+      setStatus({
+        type: 'success',
+        message: `Successfully created game "${game.name}" with ${playersCount} players!${skippedNote}`
       });
       setTimeout(() => {
         navigate(createPageUrl("Players"));
@@ -123,6 +125,11 @@ export default function ImportPlayers() {
   const handleFileChange = (e) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
+      const MAX_SIZE = 5 * 1024 * 1024;
+      if (selectedFile.size > MAX_SIZE) {
+        setStatus({ type: 'error', message: 'File is too large (max 5 MB)' });
+        return;
+      }
       setFile(selectedFile);
       setStatus({ type: '', message: '' });
       setExtractedData(null);

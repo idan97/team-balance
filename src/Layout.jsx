@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Home, Users, Trophy, Menu, LogOut } from "lucide-react";
-import { client } from "@/api/client";
+import { Home, Users, Trophy, Gamepad2, Menu, LogOut } from "lucide-react";
+import { client, supabase } from "@/api/client";
 import {
   Sidebar,
   SidebarContent,
@@ -19,21 +19,10 @@ import {
 import { Button } from "@/components/ui/button";
 
 const navigationItems = [
-  {
-    title: "Home",
-    url: createPageUrl("Home"),
-    icon: Home,
-  },
-  {
-    title: "Players",
-    url: createPageUrl("Players"),
-    icon: Users,
-  },
-  {
-    title: "Matches",
-    url: createPageUrl("Matches"),
-    icon: Trophy,
-  },
+  { title: "Home", url: createPageUrl("Home"), icon: Home },
+  { title: "Players", url: createPageUrl("Players"), icon: Users },
+  { title: "Matches", url: createPageUrl("Matches"), icon: Trophy },
+  { title: "Games", url: createPageUrl("Games"), icon: Gamepad2 },
 ];
 
 export default function Layout({ children, currentPageName }) {
@@ -50,6 +39,12 @@ export default function Layout({ children, currentPageName }) {
       }
     };
     loadUser();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_OUT') setUser(null);
+      if (event === 'SIGNED_IN') loadUser();
+    });
+    return () => subscription.unsubscribe();
   }, []);
 
   const handleLogout = () => {

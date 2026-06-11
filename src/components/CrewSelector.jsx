@@ -72,7 +72,8 @@ export default function CrewSelector({ currentCrew, onCrewChange }) {
       setShowCreateDialog(false);
       resetForm();
       selectCrew(newCrew);
-    }
+    },
+    onError: () => { alert('Failed to create crew. Please try again.'); }
   });
 
   const updateMutation = useMutation({
@@ -83,7 +84,8 @@ export default function CrewSelector({ currentCrew, onCrewChange }) {
       queryClient.invalidateQueries({ queryKey: ['currentCrew'] });
       setShowEditDialog(false);
       resetForm();
-    }
+    },
+    onError: () => { alert('Failed to update crew. Please try again.'); }
   });
 
   const resetForm = () => {
@@ -96,7 +98,7 @@ export default function CrewSelector({ currentCrew, onCrewChange }) {
       alert('Please enter a crew name');
       return;
     }
-    createMutation.mutate(formData);
+    createMutation.mutate({ ...formData, name: formData.name.trim() });
   };
 
   const handleUpdate = () => {
@@ -104,7 +106,7 @@ export default function CrewSelector({ currentCrew, onCrewChange }) {
       alert('Please enter a crew name');
       return;
     }
-    updateMutation.mutate({ id: currentCrew.id, data: formData });
+    updateMutation.mutate({ id: currentCrew.id, data: { ...formData, name: formData.name.trim() } });
   };
 
   const selectCrew = (crew) => {
@@ -129,8 +131,14 @@ export default function CrewSelector({ currentCrew, onCrewChange }) {
     const email = emailInput.trim().toLowerCase();
     if (!email) return;
 
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    const emailRegex = /^[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/i;
+    if (!emailRegex.test(email)) {
       alert('Please enter a valid email address');
+      return;
+    }
+
+    if (email === user?.email) {
+      alert("You can't share a crew with yourself");
       return;
     }
 

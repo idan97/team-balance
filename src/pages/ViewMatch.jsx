@@ -3,41 +3,30 @@ import { client } from "@/api/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, Trophy, Loader2, Calendar, Share2, Save, Pencil } from "lucide-react";
+import { ArrowLeft, Trophy, Loader2, Calendar, Share2, Save, Pencil, CheckCircle2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
 import SoccerField from "../components/match/SoccerField";
+import { useAuthGuard } from "@/hooks/useAuthGuard";
 
 export default function ViewMatch() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const urlParams = new URLSearchParams(window.location.search);
   const matchId = urlParams.get('id');
-  const [user, setUser] = useState(null);
+  const user = useAuthGuard();
   const [editedTeams, setEditedTeams] = useState(null);
   const [hasChanges, setHasChanges] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      const isAuth = await client.auth.isAuthenticated();
-      if (!isAuth) {
-        client.auth.redirectToLogin();
-        return;
-      }
-      const currentUser = await client.auth.me();
-      setUser(currentUser);
-    };
-    checkAuth();
-  }, []);
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
   const { data: match, isLoading } = useQuery({
     queryKey: ['match', matchId],
     queryFn: async () => {
-      const matches = await client.entities.Match.list();
-      return matches.find(m => m.id === matchId);
+      const matches = await client.entities.Match.filter({ id: matchId });
+      return matches[0] || null;
     },
     enabled: !!matchId && !!user
   });
@@ -57,6 +46,11 @@ export default function ViewMatch() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['match', matchId] });
       setHasChanges(false);
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 2500);
+    },
+    onError: () => {
+      alert('Failed to save changes. Please try again.');
     }
   });
 
@@ -70,7 +64,7 @@ export default function ViewMatch() {
     const p2Index = team2Players.findIndex(p => p.id === player2.id);
     
     if (p1Index === -1 || p2Index === -1) {
-      console.error('Player not found');
+      console.warn('Player not found');
       return;
     }
     
@@ -151,7 +145,10 @@ export default function ViewMatch() {
   if (!user || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-12 h-12 text-emerald-600 animate-spin" />
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 text-emerald-600 animate-spin mx-auto" />
+          <p className="text-gray-500 mt-3">Loading match...</p>
+        </div>
       </div>
     );
   }
@@ -215,6 +212,12 @@ export default function ViewMatch() {
                     <Pencil className="w-4 h-4 mr-2" />
                     Edit Match Setup
                   </Button>
+                  {saveSuccess && !hasChanges && (
+                    <span className="flex items-center gap-1 text-sm text-green-600 font-medium px-2">
+                      <CheckCircle2 className="w-4 h-4" />
+                      Saved!
+                    </span>
+                  )}
                   {hasChanges && (
                     <Button
                       onClick={handleSave}

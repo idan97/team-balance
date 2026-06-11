@@ -80,8 +80,15 @@ export default function Home() {
       localStorage.setItem('selectedCrewId', defaultCrew.id);
       setSelectedCrewId(defaultCrew.id);
       migratePlayersMutation.mutate(defaultCrew.id);
-    } else if (user && !crewsLoading && selectedCrewId) {
-      migratePlayersMutation.mutate(selectedCrewId);
+    } else if (user && !crewsLoading && allCrews.length > 0 && selectedCrewId) {
+      const validCrew = allCrews.find(c => c.id === selectedCrewId);
+      if (!validCrew) {
+        const fallback = allCrews[0];
+        localStorage.setItem('selectedCrewId', fallback.id);
+        setSelectedCrewId(fallback.id);
+      } else {
+        migratePlayersMutation.mutate(selectedCrewId);
+      }
     }
   }, [user, crewsLoading, allCrews, selectedCrewId]);
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { client } from "@/api/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -19,9 +19,20 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import StatsCard from "@/components/home/StatsCard";
+import { useAuthGuard } from "@/hooks/useAuthGuard";
 
 const positions = [
   { value: 'goalkeeper', label: 'GK', color: 'bg-yellow-100 text-yellow-700', priority: 1 },
@@ -33,7 +44,7 @@ const positions = [
 
 export default function Players() {
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
+  const user = useAuthGuard();
   const [searchQuery, setSearchQuery] = useState("");
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({});
@@ -47,6 +58,7 @@ export default function Players() {
     is_unknown: false,
     is_default: false
   });
+  const [playerToDelete, setPlayerToDelete] = useState(null);
   const [showExportDialog, setShowExportDialog] = useState(false);
   const [exportColumns, setExportColumns] = useState({
     name: true,
@@ -57,19 +69,6 @@ export default function Players() {
   });
   const queryClient = useQueryClient();
   const selectedCrewId = localStorage.getItem('selectedCrewId');
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      const isAuth = await client.auth.isAuthenticated();
-      if (!isAuth) {
-        client.auth.redirectToLogin();
-        return;
-      }
-      const currentUser = await client.auth.me();
-      setUser(currentUser);
-    };
-    checkAuth();
-  }, []);
 
   const { data: currentCrew } = useQuery({
     queryKey: ['currentCrew', selectedCrewId],
@@ -130,7 +129,8 @@ export default function Players() {
       queryClient.invalidateQueries({ queryKey: ['players'] });
       setShowAddRow(false);
       setNewPlayer({ name: '', positions: [], skill_rating: 4, is_unknown: false, is_default: false });
-    }
+    },
+    onError: () => { alert('Failed to create player. Please try again.'); }
   });
 
   const updateMutation = useMutation({
@@ -139,14 +139,16 @@ export default function Players() {
       queryClient.invalidateQueries({ queryKey: ['players'] });
       setEditingId(null);
       setEditForm({});
-    }
+    },
+    onError: () => { alert('Failed to update player. Please try again.'); }
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id) => client.entities.Player.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['players'] });
-    }
+    },
+    onError: () => { alert('Failed to delete player. Please try again.'); }
   });
 
   const handleSort = (field) => {
@@ -167,11 +169,7 @@ export default function Players() {
     updateMutation.mutate({ id, data: editForm });
   };
 
-  const handleDelete = (id) => {
-    if (window.confirm('Are you sure you want to delete this player?')) {
-      deleteMutation.mutate(id);
-    }
-  };
+  const handleDelete = (id) => setPlayerToDelete(id);
 
   const handleAddPlayer = () => {
     if (!newPlayer.name.trim()) {
@@ -229,7 +227,7 @@ export default function Players() {
   };
 
   const filteredPlayers = players
-    .filter(player => player.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    .filter(player => player?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false)
     .sort((a, b) => {
       let compareA, compareB;
       
@@ -803,6 +801,26 @@ export default function Players() {
             </TabsContent>
           </Tabs>
         )}
+
+        <AlertDialog open={!!playerToDelete} onOpenChange={(open) => !open && setPlayerToDelete(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Player</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete this player? This cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-red-600 hover:bg-red-700"
+                onClick={() => { deleteMutation.mutate(playerToDelete); setPlayerToDelete(null); }}
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         <Dialog open={showExportDialog} onOpenChange={setShowExportDialog}>
           <DialogContent className="sm:max-w-md">

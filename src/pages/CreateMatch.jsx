@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import { useAuthGuard } from "@/hooks/useAuthGuard";
 import { client } from "@/api/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -21,16 +22,17 @@ import { generateBalancedTeams } from "../components/utils/teamGeneration";
 export default function CreateMatch() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [user, setUser] = useState(null);
+  const user = useAuthGuard();
   const selectedCrewId = localStorage.getItem('selectedCrewId');
   const hasInitializedFromLastMatch = useRef(false);
   const urlParams = new URLSearchParams(window.location.search);
   const editMatchId = urlParams.get('edit');
-  
-  const today = format(new Date(), 'yyyy-MM-dd');
-  
+
+  const today = useMemo(() => format(new Date(), 'yyyy-MM-dd'), []);
+
   const [matchName, setMatchName] = useState('');
-  const [matchDate, setMatchDate] = useState(today);
+  const [formError, setFormError] = useState('');
+  const [matchDate, setMatchDate] = useState('');
   const [teamsCount, setTeamsCount] = useState(3);
   const [playersPerTeam, setPlayersPerTeam] = useState(7);
   const [formation, setFormation] = useState('3-2-1');
@@ -39,17 +41,8 @@ export default function CreateMatch() {
   const [friendRestrictions, setFriendRestrictions] = useState([]);
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const isAuth = await client.auth.isAuthenticated();
-      if (!isAuth) {
-        client.auth.redirectToLogin();
-        return;
-      }
-      const currentUser = await client.auth.me();
-      setUser(currentUser);
-    };
-    checkAuth();
-  }, []);
+    if (!matchDate) setMatchDate(today);
+  }, [today]);
 
   useEffect(() => {
     hasInitializedFromLastMatch.current = false;
@@ -78,8 +71,8 @@ export default function CreateMatch() {
   const { data: editingMatch } = useQuery({
     queryKey: ['editMatch', editMatchId],
     queryFn: async () => {
-      const matches = await client.entities.Match.list();
-      return matches.find(m => m.id === editMatchId);
+      const matches = await client.entities.Match.filter({ id: editMatchId });
+      return matches[0] || null;
     },
     enabled: !!editMatchId
   });
@@ -163,6 +156,9 @@ export default function CreateMatch() {
       queryClient.invalidateQueries({ queryKey: ['matches'] });
       queryClient.invalidateQueries({ queryKey: ['match'] });
       navigate(`${createPageUrl("ViewMatch")}?id=${match.id}`);
+    },
+    onError: () => {
+      alert('Failed to save match. Please try again.');
     }
   });
 
@@ -212,25 +208,26 @@ export default function CreateMatch() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+    setFormError('');
+
     const requiredPlayers = teamsCount * playersPerTeam;
-    
+
     if (attendingPlayerIds.length > requiredPlayers) {
-      alert(`You have selected ${attendingPlayerIds.length} players, but only ${requiredPlayers} are needed. Please deselect ${attendingPlayerIds.length - requiredPlayers} player(s).`);
+      setFormError(`You have selected ${attendingPlayerIds.length} players, but only ${requiredPlayers} are needed. Please deselect ${attendingPlayerIds.length - requiredPlayers} player(s).`);
       return;
     }
-    
+
     if (attendingPlayerIds.length < requiredPlayers) {
-      alert(`You need exactly ${requiredPlayers} players for this match configuration`);
+      setFormError(`You need exactly ${requiredPlayers} players for this match configuration`);
       return;
     }
-    
+
     const formationParts = formation.split('-').map(Number).filter(n => !isNaN(n));
     const totalFieldPlayers = formationParts.reduce((sum, num) => sum + num, 0);
     const totalPlayers = totalFieldPlayers + 1; // Assuming 1 goalkeeper
-    
+
     if (totalPlayers !== playersPerTeam) {
-      alert(`Formation ${formation} requires ${totalPlayers} players, but you have ${playersPerTeam} per team. Please adjust the formation or players per team.`);
+      setFormError(`Formation ${formation} requires ${totalPlayers} players, but you have ${playersPerTeam} per team. Please adjust the formation or players per team.`);
       return;
     }
     
@@ -360,8 +357,8 @@ export default function CreateMatch() {
                         <Label className="text-lg">Select Attending Players</Label>
                         <div className="text-sm">
                           <span className={
-                            attendingPlayerIds.length === requiredPlayers 
-                              ? "text-green-600 font-semibold" 
+                            attendingPlayerIds.length === requiredPlayers
+                              ? "text-green-600 font-semibold"
                               : attendingPlayerIds.length > requiredPlayers
                               ? "text-red-600 font-semibold"
                               : "text-orange-600 font-semibold"
@@ -370,6 +367,9 @@ export default function CreateMatch() {
                           </span>
                         </div>
                       </div>
+                      {formError && (
+                        <p className="text-sm text-red-600 font-medium mt-2">{formError}</p>
+                      )}
                       
                       {players.length === 0 ? (
                         <Card className="bg-yellow-50 border-yellow-200">

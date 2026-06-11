@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { client } from "@/api/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -10,12 +10,25 @@ import { Plus, Trophy, Users, Calendar, Share2, Loader2, Edit, Trash2, LogIn, St
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useAuthGuard } from "@/hooks/useAuthGuard";
 
 export default function Crews() {
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
+  const user = useAuthGuard();
   const [showForm, setShowForm] = useState(false);
   const [editingCrew, setEditingCrew] = useState(null);
+  const [crewToDelete, setCrewToDelete] = useState(null);
+  const [formError, setFormError] = useState('');
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -24,19 +37,6 @@ export default function Crews() {
   });
   const [emailInput, setEmailInput] = useState('');
   const queryClient = useQueryClient();
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      const isAuth = await client.auth.isAuthenticated();
-      if (!isAuth) {
-        client.auth.redirectToLogin();
-        return;
-      }
-      const currentUser = await client.auth.me();
-      setUser(currentUser);
-    };
-    checkAuth();
-  }, []);
 
   const { data: myCrews = [], isLoading } = useQuery({
     queryKey: ['myCrews', user?.email],
@@ -65,7 +65,8 @@ export default function Crews() {
       queryClient.invalidateQueries({ queryKey: ['myCrews'] });
       setShowForm(false);
       resetForm();
-    }
+    },
+    onError: () => { alert('Failed to create crew. Please try again.'); }
   });
 
   const updateMutation = useMutation({
@@ -75,14 +76,16 @@ export default function Crews() {
       queryClient.invalidateQueries({ queryKey: ['sharedCrews'] });
       setShowForm(false);
       resetForm();
-    }
+    },
+    onError: () => { alert('Failed to update crew. Please try again.'); }
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id) => client.entities.Crew.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['myCrews'] });
-    }
+    },
+    onError: () => { alert('Failed to delete crew. Please try again.'); }
   });
 
   const resetForm = () => {
@@ -93,15 +96,17 @@ export default function Crews() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    setFormError('');
     if (!formData.name.trim()) {
-      alert('Please enter a crew name');
+      setFormError('Please enter a crew name');
       return;
     }
 
+    const data = { ...formData, name: formData.name.trim() };
     if (editingCrew) {
-      updateMutation.mutate({ id: editingCrew.id, data: formData });
+      updateMutation.mutate({ id: editingCrew.id, data });
     } else {
-      createMutation.mutate(formData);
+      createMutation.mutate(data);
     }
   };
 
@@ -116,11 +121,7 @@ export default function Crews() {
     setShowForm(true);
   };
 
-  const handleDelete = (id) => {
-    if (window.confirm('Are you sure? This will delete all players and matches in this crew.')) {
-      deleteMutation.mutate(id);
-    }
-  };
+  const handleDelete = (id) => setCrewToDelete(id);
 
   const handleAddEmail = () => {
     const email = emailInput.trim().toLowerCase();
@@ -165,6 +166,25 @@ export default function Crews() {
 
   return (
     <div className="min-h-screen p-6 md:p-8">
+      <AlertDialog open={!!crewToDelete} onOpenChange={(open) => !open && setCrewToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Crew</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure? This will permanently delete this crew. Players and matches stored here will remain in the database but will be inaccessible.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700"
+              onClick={() => { deleteMutation.mutate(crewToDelete); setCrewToDelete(null); }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       <div className="max-w-7xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -277,6 +297,9 @@ export default function Crews() {
                       )}
                     </div>
 
+                    {formError && (
+                      <p className="text-sm text-red-600 font-medium">{formError}</p>
+                    )}
                     <div className="flex gap-3 pt-4">
                       <Button
                         type="button"
@@ -284,6 +307,7 @@ export default function Crews() {
                         onClick={() => {
                           setShowForm(false);
                           resetForm();
+                          setFormError('');
                         }}
                         className="flex-1"
                       >

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { client } from "@/api/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -15,24 +15,23 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useAuthGuard } from "@/hooks/useAuthGuard";
 
 export default function Matches() {
-  const [user, setUser] = useState(null);
+  const user = useAuthGuard();
+  const [matchToDelete, setMatchToDelete] = useState(null);
   const queryClient = useQueryClient();
   const selectedCrewId = localStorage.getItem('selectedCrewId');
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      const isAuth = await client.auth.isAuthenticated();
-      if (!isAuth) {
-        client.auth.redirectToLogin();
-        return;
-      }
-      const currentUser = await client.auth.me();
-      setUser(currentUser);
-    };
-    checkAuth();
-  }, []);
 
   const { data: currentCrew } = useQuery({
     queryKey: ['currentCrew', selectedCrewId],
@@ -57,14 +56,13 @@ export default function Matches() {
     mutationFn: (id) => client.entities.Match.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['matches'] });
+    },
+    onError: () => {
+      alert('Failed to delete match. Please try again.');
     }
   });
 
-  const handleDelete = (match) => {
-    if (window.confirm(`Are you sure you want to delete "${match.match_name}"?`)) {
-      deleteMutation.mutate(match.id);
-    }
-  };
+  const handleDelete = (match) => setMatchToDelete(match);
 
   if (!user) {
     return <div className="min-h-screen flex items-center justify-center text-lg text-gray-700">Loading...</div>;
@@ -108,6 +106,7 @@ export default function Matches() {
             {isLoading ? (
               <div className="text-center py-12">
                 <Loader2 className="w-12 h-12 text-emerald-600 animate-spin mx-auto" />
+                <p className="text-gray-500 mt-3">Loading matches...</p>
               </div>
             ) : matches.length === 0 ? (
               <motion.div
@@ -196,6 +195,26 @@ export default function Matches() {
           </>
         )}
       </div>
+
+      <AlertDialog open={!!matchToDelete} onOpenChange={(open) => !open && setMatchToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Match</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{matchToDelete?.match_name}"? This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700"
+              onClick={() => { deleteMutation.mutate(matchToDelete.id); setMatchToDelete(null); }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

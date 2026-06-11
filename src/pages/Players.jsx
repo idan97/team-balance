@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Search, Users, Pencil, Trash2, Save, X, Star, ArrowUpDown, ArrowUp, ArrowDown, FileSpreadsheet, Download, Trophy, BarChart2 } from "lucide-react";
+
 import { motion } from "framer-motion";
 import CrewSelector from "../components/CrewSelector";
 import { useNavigate } from "react-router-dom";
@@ -114,13 +115,7 @@ export default function Players() {
       .sort((a, b) => b.count - a.count);
   }, [matches]);
 
-  const avgPlayersPerMatch = useMemo(() => {
-    if (!matches.length) return 0;
-    const total = matches.reduce((sum, m) => sum + (m.attending_player_ids?.length || 0), 0);
-    return Math.round(total / matches.length);
-  }, [matches]);
-
-  const createMutation = useMutation({
+const createMutation = useMutation({
     mutationFn: (data) => client.entities.Player.create({
       ...data,
       game_ids: [selectedCrewId]
@@ -741,14 +736,6 @@ export default function Players() {
                     subtitle={appearanceStats[0]?.name || 'No data yet'}
                     color="text-yellow-500"
                     delay={0.1}
-                  />
-                  <StatsCard
-                    icon={BarChart2}
-                    title="Avg Players / Match"
-                    value={avgPlayersPerMatch ? String(avgPlayersPerMatch) : '—'}
-                    subtitle="attending per session"
-                    color="text-blue-600"
-                    delay={0.2}
                   />
                 </div>
 

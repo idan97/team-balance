@@ -11,11 +11,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 
-export default function Games() {
+export default function Crews() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [showForm, setShowForm] = useState(false);
-  const [editingGame, setEditingGame] = useState(null);
+  const [editingCrew, setEditingCrew] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -38,86 +38,86 @@ export default function Games() {
     checkAuth();
   }, []);
 
-  const { data: myGames = [], isLoading } = useQuery({
-    queryKey: ['myGames', user?.email],
+  const { data: myCrews = [], isLoading } = useQuery({
+    queryKey: ['myCrews', user?.email],
     queryFn: async () => {
       if (!user) return [];
-      return await client.entities.Game.filter({ created_by: user.email }, '-created_date');
+      return await client.entities.Crew.filter({ created_by: user.email }, '-created_date');
     },
     enabled: !!user
   });
 
-  const { data: sharedGames = [] } = useQuery({
-    queryKey: ['sharedGames', user?.email],
+  const { data: sharedCrews = [] } = useQuery({
+    queryKey: ['sharedCrews', user?.email],
     queryFn: async () => {
       if (!user) return [];
-      const allGames = await client.entities.Game.list('-created_date');
-      return allGames.filter(game => 
-        game.shared_with_emails && game.shared_with_emails.includes(user.email)
+      const allCrews = await client.entities.Crew.list('-created_date');
+      return allCrews.filter(crew =>
+        crew.shared_with_emails && crew.shared_with_emails.includes(user.email)
       );
     },
     enabled: !!user
   });
 
   const createMutation = useMutation({
-    mutationFn: (data) => client.entities.Game.create(data),
+    mutationFn: (data) => client.entities.Crew.create(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['myGames'] });
+      queryClient.invalidateQueries({ queryKey: ['myCrews'] });
       setShowForm(false);
       resetForm();
     }
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => client.entities.Game.update(id, data),
+    mutationFn: ({ id, data }) => client.entities.Crew.update(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['myGames'] });
-      queryClient.invalidateQueries({ queryKey: ['sharedGames'] });
+      queryClient.invalidateQueries({ queryKey: ['myCrews'] });
+      queryClient.invalidateQueries({ queryKey: ['sharedCrews'] });
       setShowForm(false);
       resetForm();
     }
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => client.entities.Game.delete(id),
+    mutationFn: (id) => client.entities.Crew.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['myGames'] });
+      queryClient.invalidateQueries({ queryKey: ['myCrews'] });
     }
   });
 
   const resetForm = () => {
     setFormData({ name: '', description: '', max_stars: 7, shared_with_emails: [] });
-    setEditingGame(null);
+    setEditingCrew(null);
     setEmailInput('');
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!formData.name.trim()) {
-      alert('Please enter a game name');
+      alert('Please enter a crew name');
       return;
     }
 
-    if (editingGame) {
-      updateMutation.mutate({ id: editingGame.id, data: formData });
+    if (editingCrew) {
+      updateMutation.mutate({ id: editingCrew.id, data: formData });
     } else {
       createMutation.mutate(formData);
     }
   };
 
-  const handleEdit = (game) => {
-    setEditingGame(game);
+  const handleEdit = (crew) => {
+    setEditingCrew(crew);
     setFormData({
-      name: game.name,
-      description: game.description || '',
-      max_stars: game.max_stars,
-      shared_with_emails: game.shared_with_emails || []
+      name: crew.name,
+      description: crew.description || '',
+      max_stars: crew.max_stars,
+      shared_with_emails: crew.shared_with_emails || []
     });
     setShowForm(true);
   };
 
   const handleDelete = (id) => {
-    if (window.confirm('Are you sure? This will delete all players and matches in this game.')) {
+    if (window.confirm('Are you sure? This will delete all players and matches in this crew.')) {
       deleteMutation.mutate(id);
     }
   };
@@ -125,7 +125,7 @@ export default function Games() {
   const handleAddEmail = () => {
     const email = emailInput.trim().toLowerCase();
     if (!email) return;
-    
+
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       alert('Please enter a valid email address');
       return;
@@ -150,8 +150,8 @@ export default function Games() {
     });
   };
 
-  const selectGame = (game) => {
-    localStorage.setItem('selectedGameId', game.id);
+  const selectCrew = (crew) => {
+    localStorage.setItem('selectedCrewId', crew.id);
     navigate(createPageUrl("Home"));
   };
 
@@ -174,10 +174,10 @@ export default function Games() {
           <div>
             <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
               <Trophy className="w-8 h-8 text-emerald-600" />
-              My Games
+              My Crews
             </h1>
             <p className="text-gray-600 mt-1">
-              Create and manage your soccer games/leagues
+              Create and manage your soccer crews/leagues
             </p>
           </div>
           <Button
@@ -189,7 +189,7 @@ export default function Games() {
             size="lg"
           >
             <Plus className="w-5 h-5 mr-2" />
-            Create Game
+            Create Crew
           </Button>
         </motion.div>
 
@@ -204,13 +204,13 @@ export default function Games() {
             >
               <Card className="border-2 border-emerald-200 shadow-lg">
                 <CardHeader className="bg-gradient-to-r from-emerald-50 to-green-50">
-                  <CardTitle>{editingGame ? 'Edit Game' : 'Create New Game'}</CardTitle>
+                  <CardTitle>{editingCrew ? 'Edit Crew' : 'Create New Crew'}</CardTitle>
                 </CardHeader>
                 <CardContent className="p-6">
                   <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="grid md:grid-cols-2 gap-6">
                       <div>
-                        <Label>Game Name</Label>
+                        <Label>Crew Name</Label>
                         <Input
                           value={formData.name}
                           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -234,7 +234,7 @@ export default function Games() {
                         </p>
                       </div>
                     </div>
-                    
+
                     <div>
                       <Label>Description (Optional)</Label>
                       <Textarea
@@ -294,7 +294,7 @@ export default function Games() {
                         className="flex-1 bg-emerald-600 hover:bg-emerald-700"
                         disabled={createMutation.isPending || updateMutation.isPending}
                       >
-                        {editingGame ? 'Update Game' : 'Create Game'}
+                        {editingCrew ? 'Update Crew' : 'Create Crew'}
                       </Button>
                     </div>
                   </form>
@@ -304,7 +304,7 @@ export default function Games() {
           )}
         </AnimatePresence>
 
-        {/* My Games */}
+        {/* My Crews */}
         {isLoading ? (
           <div className="text-center py-12">
             <Loader2 className="w-12 h-12 text-emerald-600 animate-spin mx-auto" />
@@ -312,24 +312,24 @@ export default function Games() {
         ) : (
           <>
             <div className="mb-8">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">My Games</h2>
-              {myGames.length === 0 ? (
+              <h2 className="text-xl font-bold text-gray-900 mb-4">My Crews</h2>
+              {myCrews.length === 0 ? (
                 <Card className="border-2 border-gray-200">
                   <CardContent className="p-12 text-center">
                     <Trophy className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                    <h3 className="text-xl font-semibold text-gray-900 mb-2">No games yet</h3>
-                    <p className="text-gray-600 mb-6">Create your first game to get started</p>
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">No crews yet</h3>
+                    <p className="text-gray-600 mb-6">Create your first crew to get started</p>
                     <Button onClick={() => setShowForm(true)} className="bg-emerald-600 hover:bg-emerald-700">
                       <Plus className="w-5 h-5 mr-2" />
-                      Create First Game
+                      Create First Crew
                     </Button>
                   </CardContent>
                 </Card>
               ) : (
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {myGames.map(game => (
+                  {myCrews.map(crew => (
                     <motion.div
-                      key={game.id}
+                      key={crew.id}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                     >
@@ -337,25 +337,25 @@ export default function Games() {
                         <CardHeader className="bg-gradient-to-br from-emerald-50 to-green-50">
                           <CardTitle className="text-lg flex items-center gap-2">
                             <Trophy className="w-5 h-5" />
-                            {game.name}
+                            {crew.name}
                           </CardTitle>
                         </CardHeader>
                         <CardContent className="pt-6">
                           <div className="space-y-3 text-sm mb-4">
                             <div className="flex items-center gap-2 text-gray-600">
                               <Star className="w-4 h-4" />
-                              Rating: 1-{game.max_stars} stars
+                              Rating: 1-{crew.max_stars} stars
                             </div>
-                            {game.shared_with_emails?.length > 0 && (
+                            {crew.shared_with_emails?.length > 0 && (
                               <div className="flex items-center gap-2 text-gray-600">
                                 <Share2 className="w-4 h-4" />
-                                Shared with {game.shared_with_emails.length} {game.shared_with_emails.length === 1 ? 'person' : 'people'}
+                                Shared with {crew.shared_with_emails.length} {crew.shared_with_emails.length === 1 ? 'person' : 'people'}
                               </div>
                             )}
                           </div>
                           <div className="flex gap-2">
                             <Button
-                              onClick={() => selectGame(game)}
+                              onClick={() => selectCrew(crew)}
                               className="flex-1 bg-emerald-600 hover:bg-emerald-700"
                             >
                               <LogIn className="w-4 h-4 mr-2" />
@@ -364,14 +364,14 @@ export default function Games() {
                             <Button
                               variant="outline"
                               size="icon"
-                              onClick={() => handleEdit(game)}
+                              onClick={() => handleEdit(crew)}
                             >
                               <Edit className="w-4 h-4" />
                             </Button>
                             <Button
                               variant="outline"
                               size="icon"
-                              onClick={() => handleDelete(game.id)}
+                              onClick={() => handleDelete(crew.id)}
                               className="text-red-600 hover:text-red-700"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -385,14 +385,14 @@ export default function Games() {
               )}
             </div>
 
-            {/* Shared Games */}
-            {sharedGames.length > 0 && (
+            {/* Shared Crews */}
+            {sharedCrews.length > 0 && (
               <div>
                 <h2 className="text-xl font-bold text-gray-900 mb-4">Shared with Me</h2>
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {sharedGames.map(game => (
+                  {sharedCrews.map(crew => (
                     <motion.div
-                      key={game.id}
+                      key={crew.id}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                     >
@@ -400,21 +400,21 @@ export default function Games() {
                         <CardHeader className="bg-gradient-to-br from-blue-50 to-indigo-50">
                           <CardTitle className="text-lg flex items-center gap-2">
                             <Share2 className="w-5 h-5 text-blue-600" />
-                            {game.name}
+                            {crew.name}
                           </CardTitle>
                         </CardHeader>
                         <CardContent className="pt-6">
                           <div className="space-y-3 text-sm mb-4">
                             <div className="flex items-center gap-2 text-gray-600">
                               <Star className="w-4 h-4" />
-                              Rating: 1-{game.max_stars} stars
+                              Rating: 1-{crew.max_stars} stars
                             </div>
                             <div className="text-xs text-gray-500">
-                              Owner: {game.created_by}
+                              Owner: {crew.created_by}
                             </div>
                           </div>
                           <Button
-                            onClick={() => selectGame(game)}
+                            onClick={() => selectCrew(crew)}
                             className="w-full bg-blue-600 hover:bg-blue-700"
                           >
                             <LogIn className="w-4 h-4 mr-2" />

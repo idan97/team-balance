@@ -1,0 +1,71 @@
+- generic [ref=e4]:
+  - generic [ref=e8]:
+    - generic [ref=e10]:
+      - img [ref=e12]
+      - generic [ref=e18]:
+        - heading "Team Balancer" [level=2] [ref=e19]
+        - paragraph [ref=e20]: Fair matches, every time
+    - list [ref=e24]:
+      - listitem [ref=e25]:
+        - link "Home" [ref=e26] [cursor=pointer]:
+          - /url: /home
+          - img [ref=e27]
+          - generic [ref=e30]: Home
+      - listitem [ref=e31]:
+        - link "Players" [ref=e32] [cursor=pointer]:
+          - /url: /players
+          - img [ref=e33]
+          - generic [ref=e38]: Players
+      - listitem [ref=e39]:
+        - link "Matches" [ref=e40] [cursor=pointer]:
+          - /url: /matches
+          - img [ref=e41]
+          - generic [ref=e47]: Matches
+    - generic [ref=e48]:
+      - generic [ref=e49]:
+        - paragraph [ref=e50]: Idan Ben Zvi
+        - paragraph [ref=e51]: idanbzvi@gmail.com
+      - button "Logout" [ref=e52] [cursor=pointer]:
+        - img
+        - text: Logout
+  - main [ref=e53]:
+    - generic [ref=e57]:
+      - button "Back to Players" [ref=e58] [cursor=pointer]:
+        - img
+        - text: Back to Players
+      - generic [ref=e59]:
+        - generic [ref=e61]:
+          - img [ref=e62]
+          - text: Import Players from File
+        - generic [ref=e66]:
+          - generic [ref=e68]:
+            - heading "📋 How to prepare your file:" [level=3] [ref=e69]
+            - list [ref=e70]:
+              - listitem [ref=e71]:
+                - text: Export your Google Sheet/Doc as
+                - strong [ref=e72]: CSV
+                - text: or
+                - strong [ref=e73]: Excel
+              - listitem [ref=e74]:
+                - text: "Include columns:"
+                - code [ref=e75]: name
+                - text: (required),
+                - code [ref=e76]: skill_rating
+                - text: ","
+                - code [ref=e77]: positions
+              - listitem [ref=e78]: "For positions, use comma-separated values: goalkeeper, defender, cb, midfielder, striker"
+              - listitem [ref=e79]: Skill rating should be a number (e.g., 1-7)
+          - generic [ref=e80]:
+            - text: Game Name (Optional)
+            - textbox "My Team 2024" [ref=e81]
+            - paragraph [ref=e82]: Leave empty to auto-generate a name
+          - generic [ref=e83]:
+            - text: Upload File
+            - generic [ref=e86] [cursor=pointer]:
+              - img [ref=e87]
+              - paragraph [ref=e90]: Click to upload CSV or Excel file
+          - generic [ref=e91]:
+            - button "Cancel" [ref=e92] [cursor=pointer]
+            - button "Import Players" [disabled]:
+              - img
+              - text: Import Players

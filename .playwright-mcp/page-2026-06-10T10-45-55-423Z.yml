@@ -1,0 +1,78 @@
+- generic [ref=e4]:
+  - generic [ref=e8]:
+    - generic [ref=e10]:
+      - img [ref=e12]
+      - generic [ref=e18]:
+        - heading "Team Balancer" [level=2] [ref=e19]
+        - paragraph [ref=e20]: Fair matches, every time
+    - list [ref=e24]:
+      - listitem [ref=e25]:
+        - link "Home" [ref=e26] [cursor=pointer]:
+          - /url: /home
+          - img [ref=e27]
+          - generic [ref=e30]: Home
+      - listitem [ref=e31]:
+        - link "Players" [ref=e32] [cursor=pointer]:
+          - /url: /players
+          - img [ref=e33]
+          - generic [ref=e38]: Players
+      - listitem [ref=e39]:
+        - link "Matches" [ref=e40] [cursor=pointer]:
+          - /url: /matches
+          - img [ref=e41]
+          - generic [ref=e47]: Matches
+    - generic [ref=e48]:
+      - generic [ref=e49]:
+        - paragraph [ref=e50]: Idan Ben Zvi
+        - paragraph [ref=e51]: idanbzvi@gmail.com
+      - button "Logout" [ref=e52] [cursor=pointer]:
+        - img
+        - text: Logout
+  - main [ref=e53]:
+    - generic [ref=e56]:
+      - button "Select Game" [ref=e58] [cursor=pointer]:
+        - generic [ref=e59]: Select Game
+        - img
+      - generic [ref=e60]:
+        - generic [ref=e61]:
+          - heading "Players" [level=1] [ref=e62]:
+            - img [ref=e63]
+            - text: Players
+          - paragraph [ref=e68]: Manage your player roster (0 total)
+        - generic [ref=e69]:
+          - button "Export to Excel" [disabled]:
+            - img
+            - text: Export to Excel
+          - button "Import from File" [ref=e70] [cursor=pointer]:
+            - img
+            - text: Import from File
+          - button "Add Player" [ref=e71] [cursor=pointer]:
+            - img
+            - text: Add Player
+      - generic [ref=e73]:
+        - img [ref=e74]
+        - textbox "Search players..." [ref=e77]
+      - table [ref=e81]:
+        - rowgroup [ref=e82]:
+          - row "Name Positions Rating Unknown Default Actions" [ref=e83]:
+            - columnheader "Name" [ref=e84]:
+              - button "Name" [ref=e85] [cursor=pointer]:
+                - text: Name
+                - img [ref=e86]
+            - columnheader "Positions" [ref=e88]:
+              - button "Positions" [ref=e89] [cursor=pointer]:
+                - text: Positions
+                - img [ref=e90]
+            - columnheader "Rating" [ref=e93]:
+              - button "Rating" [ref=e94] [cursor=pointer]:
+                - text: Rating
+                - img [ref=e95]
+            - columnheader "Unknown" [ref=e98]:
+              - button "Unknown" [ref=e99] [cursor=pointer]:
+                - text: Unknown
+                - img [ref=e100]
+            - columnheader "Default" [ref=e103]
+            - columnheader "Actions" [ref=e104]
+        - rowgroup [ref=e105]:
+          - row [ref=e106]:
+            - cell [ref=e107]

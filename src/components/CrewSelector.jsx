@@ -21,7 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
-export default function GameSelector({ currentGame, onGameChange }) {
+export default function CrewSelector({ currentCrew, onCrewChange }) {
   const [user, setUser] = useState(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
@@ -44,43 +44,43 @@ export default function GameSelector({ currentGame, onGameChange }) {
     loadUser();
   }, []);
 
-  const { data: myGames = [] } = useQuery({
-    queryKey: ['myGames', user?.email],
+  const { data: myCrews = [] } = useQuery({
+    queryKey: ['myCrews', user?.email],
     queryFn: async () => {
       if (!user) return [];
-      return await client.entities.Game.filter({ created_by: user.email }, '-created_date');
+      return await client.entities.Crew.filter({ created_by: user.email }, '-created_date');
     },
     enabled: !!user
   });
 
-  const { data: sharedGames = [] } = useQuery({
-    queryKey: ['sharedGames', user?.email],
+  const { data: sharedCrews = [] } = useQuery({
+    queryKey: ['sharedCrews', user?.email],
     queryFn: async () => {
       if (!user) return [];
-      const allGames = await client.entities.Game.list('-created_date');
-      return allGames.filter(game => 
-        game.shared_with_emails && game.shared_with_emails.includes(user.email)
+      const allCrews = await client.entities.Crew.list('-created_date');
+      return allCrews.filter(crew =>
+        crew.shared_with_emails && crew.shared_with_emails.includes(user.email)
       );
     },
     enabled: !!user
   });
 
   const createMutation = useMutation({
-    mutationFn: (data) => client.entities.Game.create(data),
-    onSuccess: (newGame) => {
-      queryClient.invalidateQueries({ queryKey: ['myGames'] });
+    mutationFn: (data) => client.entities.Crew.create(data),
+    onSuccess: (newCrew) => {
+      queryClient.invalidateQueries({ queryKey: ['myCrews'] });
       setShowCreateDialog(false);
       resetForm();
-      selectGame(newGame);
+      selectCrew(newCrew);
     }
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => client.entities.Game.update(id, data),
+    mutationFn: ({ id, data }) => client.entities.Crew.update(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['myGames'] });
-      queryClient.invalidateQueries({ queryKey: ['sharedGames'] });
-      queryClient.invalidateQueries({ queryKey: ['currentGame'] });
+      queryClient.invalidateQueries({ queryKey: ['myCrews'] });
+      queryClient.invalidateQueries({ queryKey: ['sharedCrews'] });
+      queryClient.invalidateQueries({ queryKey: ['currentCrew'] });
       setShowEditDialog(false);
       resetForm();
     }
@@ -93,7 +93,7 @@ export default function GameSelector({ currentGame, onGameChange }) {
 
   const handleCreate = () => {
     if (!formData.name.trim()) {
-      alert('Please enter a game name');
+      alert('Please enter a crew name');
       return;
     }
     createMutation.mutate(formData);
@@ -101,25 +101,25 @@ export default function GameSelector({ currentGame, onGameChange }) {
 
   const handleUpdate = () => {
     if (!formData.name.trim()) {
-      alert('Please enter a game name');
+      alert('Please enter a crew name');
       return;
     }
-    updateMutation.mutate({ id: currentGame.id, data: formData });
+    updateMutation.mutate({ id: currentCrew.id, data: formData });
   };
 
-  const selectGame = (game) => {
-    localStorage.setItem('selectedGameId', game.id);
-    if (onGameChange) onGameChange(game);
+  const selectCrew = (crew) => {
+    localStorage.setItem('selectedCrewId', crew.id);
+    if (onCrewChange) onCrewChange(crew);
     window.location.reload();
   };
 
   const openEditDialog = () => {
-    if (currentGame) {
+    if (currentCrew) {
       setFormData({
-        name: currentGame.name,
-        description: currentGame.description || '',
-        max_stars: currentGame.max_stars || 7,
-        shared_with_emails: currentGame.shared_with_emails || []
+        name: currentCrew.name,
+        description: currentCrew.description || '',
+        max_stars: currentCrew.max_stars || 7,
+        shared_with_emails: currentCrew.shared_with_emails || []
       });
       setShowEditDialog(true);
     }
@@ -128,7 +128,7 @@ export default function GameSelector({ currentGame, onGameChange }) {
   const handleAddEmail = () => {
     const email = emailInput.trim().toLowerCase();
     if (!email) return;
-    
+
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       alert('Please enter a valid email address');
       return;
@@ -153,86 +153,86 @@ export default function GameSelector({ currentGame, onGameChange }) {
     });
   };
 
-  const allGames = [...myGames, ...sharedGames];
-  const isOwner = currentGame && currentGame.created_by === user?.email;
+  const allCrews = [...myCrews, ...sharedCrews];
+  const isOwner = currentCrew && currentCrew.created_by === user?.email;
 
   return (
     <>
       <div className="mb-6 flex items-center gap-2">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               className="w-full md:w-auto border-2 border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-left justify-between min-w-[200px]"
             >
               <span className="font-semibold text-emerald-900">
-                {currentGame ? currentGame.name : 'Select Game'}
+                {currentCrew ? currentCrew.name : 'Select Crew'}
               </span>
               <ChevronDown className="w-4 h-4 ml-2 text-emerald-600" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-64">
-            {myGames.length > 0 && (
+            {myCrews.length > 0 && (
               <>
-                <div className="px-2 py-1.5 text-xs font-semibold text-gray-500">My Games</div>
-                {myGames.map(game => (
+                <div className="px-2 py-1.5 text-xs font-semibold text-gray-500">My Crews</div>
+                {myCrews.map(crew => (
                   <DropdownMenuItem
-                    key={game.id}
-                    onClick={() => selectGame(game)}
-                    className={currentGame?.id === game.id ? 'bg-emerald-50' : ''}
+                    key={crew.id}
+                    onClick={() => selectCrew(crew)}
+                    className={currentCrew?.id === crew.id ? 'bg-emerald-50' : ''}
                   >
-                    <span className="font-medium">{game.name}</span>
+                    <span className="font-medium">{crew.name}</span>
                   </DropdownMenuItem>
                 ))}
               </>
             )}
-            
-            {sharedGames.length > 0 && (
+
+            {sharedCrews.length > 0 && (
               <>
                 <DropdownMenuSeparator />
                 <div className="px-2 py-1.5 text-xs font-semibold text-gray-500">Shared with Me</div>
-                {sharedGames.map(game => (
+                {sharedCrews.map(crew => (
                   <DropdownMenuItem
-                    key={game.id}
-                    onClick={() => selectGame(game)}
-                    className={currentGame?.id === game.id ? 'bg-emerald-50' : ''}
+                    key={crew.id}
+                    onClick={() => selectCrew(crew)}
+                    className={currentCrew?.id === crew.id ? 'bg-emerald-50' : ''}
                   >
-                    <span className="font-medium">{game.name}</span>
+                    <span className="font-medium">{crew.name}</span>
                   </DropdownMenuItem>
                 ))}
               </>
             )}
-            
+
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => setShowCreateDialog(true)}>
               <Plus className="w-4 h-4 mr-2" />
-              Create New Game
+              Create New Crew
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {currentGame && isOwner && (
+        {currentCrew && isOwner && (
           <Button
             variant="outline"
             size="icon"
             onClick={openEditDialog}
             className="border-emerald-200 hover:bg-emerald-50"
-            title="Edit Game"
+            title="Edit Crew"
           >
             <Settings className="w-4 h-4 text-emerald-700" />
           </Button>
         )}
       </div>
 
-      {/* Create Game Dialog */}
+      {/* Create Crew Dialog */}
       <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Create New Game</DialogTitle>
+            <DialogTitle>Create New Crew</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div>
-              <Label>Game Name</Label>
+              <Label>Crew Name</Label>
               <Input
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -268,26 +268,26 @@ export default function GameSelector({ currentGame, onGameChange }) {
             <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
               Cancel
             </Button>
-            <Button 
+            <Button
               onClick={handleCreate}
               className="bg-emerald-600 hover:bg-emerald-700"
               disabled={createMutation.isPending}
             >
-              Create Game
+              Create Crew
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Edit Game Dialog */}
+      {/* Edit Crew Dialog */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit Game</DialogTitle>
+            <DialogTitle>Edit Crew</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div>
-              <Label>Game Name</Label>
+              <Label>Crew Name</Label>
               <Input
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -354,7 +354,7 @@ export default function GameSelector({ currentGame, onGameChange }) {
             <Button variant="outline" onClick={() => setShowEditDialog(false)}>
               Cancel
             </Button>
-            <Button 
+            <Button
               onClick={handleUpdate}
               className="bg-emerald-600 hover:bg-emerald-700"
               disabled={updateMutation.isPending}

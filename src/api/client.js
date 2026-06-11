@@ -237,7 +237,7 @@ const integrations = {
 
 export const client = {
   entities: {
-    Game: makeEntity('Game'),
+    Crew: makeEntity('Game'),
     Player: makeEntity('Player'),
     Match: makeEntity('Match'),
   },

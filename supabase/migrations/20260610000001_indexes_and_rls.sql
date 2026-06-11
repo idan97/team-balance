@@ -10,8 +10,6 @@ CREATE POLICY "Users can read games shared with them"
     auth.uid() = user_id
     OR (
       entity = 'Game'
-      AND data->'shared_with_emails' @> to_jsonb(
-        (SELECT email FROM auth.users WHERE id = auth.uid())
-      )
+      AND data->'shared_with_emails' @> to_jsonb(auth.email())
     )
   );

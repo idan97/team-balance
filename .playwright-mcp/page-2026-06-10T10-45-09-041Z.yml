@@ -1,0 +1,32 @@
+- generic [ref=e4]:
+  - generic [ref=e8]:
+    - generic [ref=e10]:
+      - img [ref=e12]
+      - generic [ref=e18]:
+        - heading "Team Balancer" [level=2] [ref=e19]
+        - paragraph [ref=e20]: Fair matches, every time
+    - list [ref=e24]:
+      - listitem [ref=e25]:
+        - link "Home" [ref=e26] [cursor=pointer]:
+          - /url: /home
+          - img [ref=e27]
+          - generic [ref=e30]: Home
+      - listitem [ref=e31]:
+        - link "Players" [ref=e32] [cursor=pointer]:
+          - /url: /players
+          - img [ref=e33]
+          - generic [ref=e38]: Players
+      - listitem [ref=e39]:
+        - link "Matches" [active] [ref=e40] [cursor=pointer]:
+          - /url: /matches
+          - img [ref=e41]
+          - generic [ref=e47]: Matches
+    - generic [ref=e48]:
+      - generic [ref=e49]:
+        - paragraph [ref=e50]: Idan Ben Zvi
+        - paragraph [ref=e51]: idanbzvi@gmail.com
+      - button "Logout" [ref=e52] [cursor=pointer]:
+        - img
+        - text: Logout
+  - main [ref=e53]:
+    - img [ref=e56]

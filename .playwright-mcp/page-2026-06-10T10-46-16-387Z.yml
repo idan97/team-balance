@@ -1,0 +1,100 @@
+- generic [ref=e4]:
+  - generic [ref=e8]:
+    - generic [ref=e10]:
+      - img [ref=e12]
+      - generic [ref=e18]:
+        - heading "Team Balancer" [level=2] [ref=e19]
+        - paragraph [ref=e20]: Fair matches, every time
+    - list [ref=e24]:
+      - listitem [ref=e25]:
+        - link "Home" [ref=e26] [cursor=pointer]:
+          - /url: /home
+          - img [ref=e27]
+          - generic [ref=e30]: Home
+      - listitem [ref=e31]:
+        - link "Players" [ref=e32] [cursor=pointer]:
+          - /url: /players
+          - img [ref=e33]
+          - generic [ref=e38]: Players
+      - listitem [ref=e39]:
+        - link "Matches" [ref=e40] [cursor=pointer]:
+          - /url: /matches
+          - img [ref=e41]
+          - generic [ref=e47]: Matches
+    - generic [ref=e48]:
+      - generic [ref=e49]:
+        - paragraph [ref=e50]: Idan Ben Zvi
+        - paragraph [ref=e51]: idanbzvi@gmail.com
+      - button "Logout" [ref=e52] [cursor=pointer]:
+        - img
+        - text: Logout
+  - main [ref=e53]:
+    - generic [ref=e56]:
+      - button "Select Game" [ref=e58] [cursor=pointer]:
+        - generic [ref=e59]: Select Game
+        - img
+      - generic [ref=e60]:
+        - button "Back to Matches" [ref=e61] [cursor=pointer]:
+          - img
+          - text: Back to Matches
+        - generic [ref=e62]:
+          - generic [ref=e64]: Create New Match
+          - generic [ref=e66]:
+            - generic [ref=e67]:
+              - generic [ref=e68]:
+                - generic [ref=e69]:
+                  - generic [ref=e70]:
+                    - text: Match Name (Optional)
+                    - textbox "Sunday Game" [ref=e71]
+                  - generic [ref=e72]:
+                    - text: Date
+                    - textbox [ref=e73]: 2026-06-10
+                - generic [ref=e74]:
+                  - generic [ref=e75]:
+                    - text: Teams
+                    - spinbutton [ref=e76]: "3"
+                  - generic [ref=e77]:
+                    - text: Players/Team
+                    - spinbutton [ref=e78]: "7"
+                  - generic [ref=e79]:
+                    - text: Formation
+                    - textbox "3-2-1" [ref=e80]
+              - generic [ref=e83]:
+                - generic [ref=e84]:
+                  - heading "Formation Preview" [level=3] [ref=e85]
+                  - generic [ref=e86]:
+                    - img [ref=e87]
+                    - text: Valid
+                - generic [ref=e90]:
+                  - generic [ref=e97]: GK
+                  - generic [ref=e100]: "1"
+                  - generic [ref=e103]: "2"
+                  - generic [ref=e106]: "3"
+                  - generic [ref=e109]: "4"
+                  - generic [ref=e112]: "5"
+                  - generic [ref=e115]: "7"
+                - generic [ref=e116]:
+                  - generic [ref=e117]:
+                    - generic [ref=e118]: "Goalkeeper:"
+                    - generic [ref=e119]: "1"
+                  - generic [ref=e120]:
+                    - generic [ref=e121]: "Field players:"
+                    - generic [ref=e122]: "6"
+                  - generic [ref=e123]:
+                    - generic [ref=e124]: "Total players:"
+                    - generic [ref=e125]: 7 ✓
+            - generic [ref=e126]:
+              - tablist [ref=e127]:
+                - tab "1. Select Players" [selected] [ref=e128] [cursor=pointer]
+                - tab "2. Friend Groups" [disabled]
+                - tab "3. Manual Assignment" [disabled]
+              - tabpanel "1. Select Players" [ref=e129]:
+                - generic [ref=e130]:
+                  - generic [ref=e131]: Select Attending Players
+                  - generic [ref=e133]: 0 / 21 needed
+                - paragraph [ref=e136]: No players available. Add players first!
+            - generic [ref=e137]:
+              - button "Cancel" [ref=e138] [cursor=pointer]
+              - button "Generate Teams" [disabled]:
+                - img
+                - text: Generate Teams

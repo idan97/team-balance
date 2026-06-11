@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Search, Users, Pencil, Trash2, Save, X, Star, ArrowUpDown, ArrowUp, ArrowDown, FileSpreadsheet, Download } from "lucide-react";
 import { motion } from "framer-motion";
-import GameSelector from "../components/GameSelector";
+import CrewSelector from "../components/CrewSelector";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import {
@@ -54,7 +54,7 @@ export default function Players() {
     default: true
   });
   const queryClient = useQueryClient();
-  const selectedGameId = localStorage.getItem('selectedGameId');
+  const selectedCrewId = localStorage.getItem('selectedCrewId');
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -69,30 +69,30 @@ export default function Players() {
     checkAuth();
   }, []);
 
-  const { data: currentGame } = useQuery({
-    queryKey: ['currentGame', selectedGameId],
+  const { data: currentCrew } = useQuery({
+    queryKey: ['currentCrew', selectedCrewId],
     queryFn: async () => {
-      if (!selectedGameId) return null;
-      const allGames = await client.entities.Game.list();
-      return allGames.find(g => g.id === selectedGameId) || null;
+      if (!selectedCrewId) return null;
+      const allCrews = await client.entities.Crew.list();
+      return allCrews.find(g => g.id === selectedCrewId) || null;
     },
-    enabled: !!selectedGameId
+    enabled: !!selectedCrewId
   });
 
   const { data: players = [], isLoading } = useQuery({
-    queryKey: ['players', selectedGameId],
+    queryKey: ['players', selectedCrewId],
     queryFn: async () => {
-      if (!selectedGameId) return [];
+      if (!selectedCrewId) return [];
       const allPlayers = await client.entities.Player.list('-created_date');
-      return allPlayers.filter(p => p.game_ids && p.game_ids.includes(selectedGameId));
+      return allPlayers.filter(p => p.game_ids && p.game_ids.includes(selectedCrewId));
     },
-    enabled: !!selectedGameId
+    enabled: !!selectedCrewId
   });
 
   const createMutation = useMutation({
-    mutationFn: (data) => client.entities.Player.create({ 
-      ...data, 
-      game_ids: [selectedGameId] 
+    mutationFn: (data) => client.entities.Player.create({
+      ...data,
+      game_ids: [selectedCrewId]
     }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['players'] });
@@ -227,7 +227,7 @@ export default function Players() {
       return 0;
     });
 
-  const maxStars = currentGame?.max_stars || 7;
+  const maxStars = currentCrew?.max_stars || 7;
 
   const handleExport = () => {
     const headers = [];
@@ -311,7 +311,7 @@ export default function Players() {
   return (
     <div className="min-h-screen p-6 md:p-8">
       <div className="max-w-7xl mx-auto">
-        <GameSelector currentGame={currentGame} />
+        <CrewSelector currentCrew={currentCrew} />
 
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -327,7 +327,7 @@ export default function Players() {
               Manage your player roster ({players.length} total)
             </p>
           </div>
-          {selectedGameId && (
+          {selectedCrewId && (
             <div className="flex gap-2">
               <Button
                 onClick={() => setShowExportDialog(true)}
@@ -360,7 +360,7 @@ export default function Players() {
           )}
         </motion.div>
 
-        {selectedGameId && (
+        {selectedCrewId && (
           <>
             <motion.div
               initial={{ opacity: 0 }}

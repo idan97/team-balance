@@ -15,14 +15,14 @@ import FormationPreview from "../components/match/FormationPreview";
 import TeamAssignmentView from "../components/match/TeamAssignmentView";
 import FriendRestrictions from "../components/match/FriendRestrictions";
 import PlayerSelectionTable from "../components/match/PlayerSelectionTable";
-import GameSelector from "../components/GameSelector";
+import CrewSelector from "../components/CrewSelector";
 import { generateBalancedTeams } from "../components/utils/teamGeneration";
 
 export default function CreateMatch() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [user, setUser] = useState(null);
-  const selectedGameId = localStorage.getItem('selectedGameId');
+  const selectedCrewId = localStorage.getItem('selectedCrewId');
   const hasInitializedFromLastMatch = useRef(false);
   const urlParams = new URLSearchParams(window.location.search);
   const editMatchId = urlParams.get('edit');
@@ -55,24 +55,24 @@ export default function CreateMatch() {
     hasInitializedFromLastMatch.current = false;
   }, [editMatchId]);
 
-  const { data: currentGame } = useQuery({
-    queryKey: ['currentGame', selectedGameId],
+  const { data: currentCrew } = useQuery({
+    queryKey: ['currentCrew', selectedCrewId],
     queryFn: async () => {
-      if (!selectedGameId) return null;
-      const allGames = await client.entities.Game.list();
-      return allGames.find(g => g.id === selectedGameId) || null;
+      if (!selectedCrewId) return null;
+      const allCrews = await client.entities.Crew.list();
+      return allCrews.find(g => g.id === selectedCrewId) || null;
     },
-    enabled: !!selectedGameId
+    enabled: !!selectedCrewId
   });
 
   const { data: players = [] } = useQuery({
-    queryKey: ['players', selectedGameId],
+    queryKey: ['players', selectedCrewId],
     queryFn: async () => {
-      if (!selectedGameId) return [];
+      if (!selectedCrewId) return [];
       const allPlayers = await client.entities.Player.list('name');
-      return allPlayers.filter(p => p.game_ids && p.game_ids.includes(selectedGameId));
+      return allPlayers.filter(p => p.game_ids && p.game_ids.includes(selectedCrewId));
     },
-    enabled: !!selectedGameId
+    enabled: !!selectedCrewId
   });
 
   const { data: editingMatch } = useQuery({
@@ -85,13 +85,13 @@ export default function CreateMatch() {
   });
 
   const { data: lastMatch } = useQuery({
-    queryKey: ['lastMatch', selectedGameId],
+    queryKey: ['lastMatch', selectedCrewId],
     queryFn: async () => {
-      if (!selectedGameId) return null;
-      const matches = await client.entities.Match.filter({ game_id: selectedGameId }, '-created_date', 1);
+      if (!selectedCrewId) return null;
+      const matches = await client.entities.Match.filter({ game_id: selectedCrewId }, '-created_date', 1);
       return matches[0] || null;
     },
-    enabled: !!selectedGameId && !editMatchId
+    enabled: !!selectedCrewId && !editMatchId
   });
 
   useEffect(() => {
@@ -132,14 +132,14 @@ export default function CreateMatch() {
         data.players_per_team,
         data.pre_assigned_teams,
         data.friend_restrictions,
-        currentGame?.max_stars || 7,
+        currentCrew?.max_stars || 7,
         data.formation
       );
       
       const finalMatchName = data.match_name.trim() || `Match ${format(new Date(data.match_date), 'MMM d, yyyy')}`;
       
       const matchData = {
-        game_id: selectedGameId,
+        game_id: selectedCrewId,
         match_name: finalMatchName,
         match_date: data.match_date,
         teams_count: data.teams_count,
@@ -255,7 +255,7 @@ export default function CreateMatch() {
   return (
     <div className="min-h-screen p-6 md:p-8">
       <div className="max-w-7xl mx-auto">
-        <GameSelector currentGame={currentGame} />
+        <CrewSelector currentCrew={currentCrew} />
         
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -270,7 +270,7 @@ export default function CreateMatch() {
             Back to Matches
           </Button>
 
-          {selectedGameId && (
+          {selectedCrewId && (
             <Card className="border-2 border-emerald-200 shadow-xl">
               <CardHeader className="bg-gradient-to-r from-emerald-50 to-green-50">
                 <CardTitle className="text-2xl">

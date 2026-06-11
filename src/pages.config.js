@@ -48,7 +48,7 @@
  * The mainPage value must match a key in the PAGES object exactly.
  */
 import CreateMatch from './pages/CreateMatch';
-import Games from './pages/Games';
+import Crews from './pages/Crews';
 import Home from './pages/Home';
 import ImportPlayers from './pages/ImportPlayers';
 import Matches from './pages/Matches';
@@ -59,7 +59,7 @@ import __Layout from './Layout.jsx';
 
 export const PAGES = {
     "CreateMatch": CreateMatch,
-    "Games": Games,
+    "Crews": Crews,
     "Home": Home,
     "ImportPlayers": ImportPlayers,
     "Matches": Matches,

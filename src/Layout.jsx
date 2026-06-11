@@ -22,7 +22,7 @@ const navigationItems = [
   { title: "Home", url: createPageUrl("Home"), icon: Home },
   { title: "Players", url: createPageUrl("Players"), icon: Users },
   { title: "Matches", url: createPageUrl("Matches"), icon: Trophy },
-  { title: "Games", url: createPageUrl("Games"), icon: Gamepad2 },
+  { title: "Crews", url: createPageUrl("Crews"), icon: Gamepad2 },
 ];
 
 export default function Layout({ children, currentPageName }) {

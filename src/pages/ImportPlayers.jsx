@@ -15,7 +15,7 @@ export default function ImportPlayers() {
   const queryClient = useQueryClient();
   const [user, setUser] = useState(null);
   const [file, setFile] = useState(null);
-  const [gameName, setGameName] = useState('');
+  const [crewName, setCrewName] = useState('');
   const [status, setStatus] = useState({ type: '', message: '' });
   const [extractedData, setExtractedData] = useState(null);
 
@@ -33,14 +33,14 @@ export default function ImportPlayers() {
   }, []);
 
   const importMutation = useMutation({
-    mutationFn: async ({ file, gameName }) => {
+    mutationFn: async ({ file, crewName }) => {
       setStatus({ type: 'loading', message: 'Uploading file...' });
-      
+
       // Upload file
       const { file_url } = await client.integrations.Core.UploadFile({ file });
-      
+
       setStatus({ type: 'loading', message: 'Extracting player data...' });
-      
+
       // Extract data with schema
       const result = await client.integrations.Core.ExtractDataFromUploadedFile({
         file_url: file_url,
@@ -78,17 +78,17 @@ export default function ImportPlayers() {
 
       setExtractedData(playersData);
       const skipped = result.skipped || 0;
-      setStatus({ type: 'loading', message: `Creating game with ${playersData.length} players${skipped > 0 ? ` (${skipped} rows skipped — missing name)` : ''}...` });
+      setStatus({ type: 'loading', message: `Creating crew with ${playersData.length} players${skipped > 0 ? ` (${skipped} rows skipped — missing name)` : ''}...` });
 
-      // Create game
-      const game = await client.entities.Game.create({
-        name: gameName || `Imported Game ${new Date().toLocaleDateString()}`
+      // Create crew
+      const crew = await client.entities.Crew.create({
+        name: crewName || `Imported Crew ${new Date().toLocaleDateString()}`
       });
 
       // Prepare players for bulk creation
       const playersToCreate = playersData.map(p => ({
         name: p.name,
-        game_ids: [game.id],
+        game_ids: [crew.id],
         skill_rating: p.skill_rating || null,
         positions: p.positions || [],
         is_unknown: p.is_unknown || false
@@ -97,18 +97,18 @@ export default function ImportPlayers() {
       // Bulk create players
       await client.entities.Player.bulkCreate(playersToCreate);
 
-      // Set as selected game
-      localStorage.setItem('selectedGameId', game.id);
+      // Set as selected crew
+      localStorage.setItem('selectedCrewId', crew.id);
 
-      return { game, playersCount: playersData.length, skipped: result.skipped || 0 };
+      return { crew, playersCount: playersData.length, skipped: result.skipped || 0 };
     },
-    onSuccess: ({ game, playersCount, skipped }) => {
-      queryClient.invalidateQueries({ queryKey: ['games'] });
+    onSuccess: ({ crew, playersCount, skipped }) => {
+      queryClient.invalidateQueries({ queryKey: ['allCrews'] });
       queryClient.invalidateQueries({ queryKey: ['players'] });
       const skippedNote = skipped > 0 ? ` (${skipped} rows skipped — missing name)` : '';
       setStatus({
         type: 'success',
-        message: `Successfully created game "${game.name}" with ${playersCount} players!${skippedNote}`
+        message: `Successfully created crew "${crew.name}" with ${playersCount} players!${skippedNote}`
       });
       setTimeout(() => {
         navigate(createPageUrl("Players"));
@@ -142,7 +142,7 @@ export default function ImportPlayers() {
       setStatus({ type: 'error', message: 'Please select a file' });
       return;
     }
-    importMutation.mutate({ file, gameName });
+    importMutation.mutate({ file, crewName });
   };
 
   if (!user) {
@@ -193,10 +193,10 @@ export default function ImportPlayers() {
 
                 {/* Game Name */}
                 <div>
-                  <Label>Game Name (Optional)</Label>
+                  <Label>Crew Name (Optional)</Label>
                   <Input
-                    value={gameName}
-                    onChange={(e) => setGameName(e.target.value)}
+                    value={crewName}
+                    onChange={(e) => setCrewName(e.target.value)}
                     placeholder="My Team 2024"
                     className="mt-2"
                     disabled={importMutation.isPending}

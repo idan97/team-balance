@@ -7,13 +7,13 @@ import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { client } from "@/api/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import GameSelector from "../components/GameSelector";
+import CrewSelector from "../components/CrewSelector";
 
 export default function Home() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [user, setUser] = useState(null);
-  const [selectedGameId, setSelectedGameId] = useState(localStorage.getItem('selectedGameId'));
+  const [selectedCrewId, setSelectedCrewId] = useState(localStorage.getItem('selectedCrewId'));
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -28,71 +28,71 @@ export default function Home() {
     checkAuth();
   }, []);
 
-  // Ensure default game exists
-  const { data: allGames = [], isLoading: gamesLoading } = useQuery({
-    queryKey: ['allGames', user?.email],
+  // Ensure default crew exists
+  const { data: allCrews = [], isLoading: crewsLoading } = useQuery({
+    queryKey: ['allCrews', user?.email],
     queryFn: async () => {
       if (!user) return [];
-      const myGames = await client.entities.Game.filter({ created_by: user.email });
-      const allGames = await client.entities.Game.list();
-      const sharedGames = allGames.filter(g => 
+      const myCrews = await client.entities.Crew.filter({ created_by: user.email });
+      const allCrews = await client.entities.Crew.list();
+      const sharedCrews = allCrews.filter(g =>
         g.shared_with_emails && g.shared_with_emails.includes(user.email)
       );
-      return [...myGames, ...sharedGames];
+      return [...myCrews, ...sharedCrews];
     },
     enabled: !!user
   });
 
-  const createDefaultGameMutation = useMutation({
+  const createDefaultCrewMutation = useMutation({
     mutationFn: async () => {
-      const defaultGame = await client.entities.Game.create({
-        name: "Default Game",
+      const defaultCrew = await client.entities.Crew.create({
+        name: "My Crew",
         max_stars: 7,
-        description: "Your default game"
+        description: "Your default crew"
       });
-      return defaultGame;
+      return defaultCrew;
     },
-    onSuccess: (newGame) => {
-      localStorage.setItem('selectedGameId', newGame.id);
-      setSelectedGameId(newGame.id);
-      queryClient.invalidateQueries({ queryKey: ['allGames'] });
-      queryClient.invalidateQueries({ queryKey: ['currentGame'] });
+    onSuccess: (newCrew) => {
+      localStorage.setItem('selectedCrewId', newCrew.id);
+      setSelectedCrewId(newCrew.id);
+      queryClient.invalidateQueries({ queryKey: ['allCrews'] });
+      queryClient.invalidateQueries({ queryKey: ['currentCrew'] });
     }
   });
 
-  // Migrate orphaned players to default game
+  // Migrate orphaned players to default crew
   const migratePlayersMutation = useMutation({
-    mutationFn: async (gameId) => {
+    mutationFn: async (crewId) => {
       const allPlayers = await client.entities.Player.list();
       const orphanedPlayers = allPlayers.filter(p => !p.game_ids || p.game_ids.length === 0);
-      
+
       for (const player of orphanedPlayers) {
-        await client.entities.Player.update(player.id, { game_ids: [gameId] });
+        await client.entities.Player.update(player.id, { game_ids: [crewId] });
       }
     }
   });
 
   useEffect(() => {
-    if (user && !gamesLoading && allGames.length === 0) {
-      createDefaultGameMutation.mutate();
-    } else if (user && !gamesLoading && allGames.length > 0 && !selectedGameId) {
-      const defaultGame = allGames[0];
-      localStorage.setItem('selectedGameId', defaultGame.id);
-      setSelectedGameId(defaultGame.id);
-      migratePlayersMutation.mutate(defaultGame.id);
-    } else if (user && !gamesLoading && selectedGameId) {
-      migratePlayersMutation.mutate(selectedGameId);
+    if (user && !crewsLoading && allCrews.length === 0) {
+      createDefaultCrewMutation.mutate();
+    } else if (user && !crewsLoading && allCrews.length > 0 && !selectedCrewId) {
+      const defaultCrew = allCrews[0];
+      localStorage.setItem('selectedCrewId', defaultCrew.id);
+      setSelectedCrewId(defaultCrew.id);
+      migratePlayersMutation.mutate(defaultCrew.id);
+    } else if (user && !crewsLoading && selectedCrewId) {
+      migratePlayersMutation.mutate(selectedCrewId);
     }
-  }, [user, gamesLoading, allGames, selectedGameId]);
+  }, [user, crewsLoading, allCrews, selectedCrewId]);
 
-  const { data: currentGame } = useQuery({
-    queryKey: ['currentGame', selectedGameId],
+  const { data: currentCrew } = useQuery({
+    queryKey: ['currentCrew', selectedCrewId],
     queryFn: async () => {
-      if (!selectedGameId) return null;
-      const allGames = await client.entities.Game.list();
-      return allGames.find(g => g.id === selectedGameId) || null;
+      if (!selectedCrewId) return null;
+      const allCrews = await client.entities.Crew.list();
+      return allCrews.find(g => g.id === selectedCrewId) || null;
     },
-    enabled: !!selectedGameId
+    enabled: !!selectedCrewId
   });
 
   const features = [
@@ -118,7 +118,7 @@ export default function Home() {
     }
   ];
 
-  if (!user || gamesLoading || createDefaultGameMutation.isPending) {
+  if (!user || crewsLoading || createDefaultCrewMutation.isPending) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="w-12 h-12 text-emerald-600 animate-spin" />
@@ -129,8 +129,8 @@ export default function Home() {
   return (
     <div className="min-h-screen flex items-center justify-center p-6">
       <div className="max-w-4xl mx-auto w-full">
-        <GameSelector currentGame={currentGame} />
-        
+        <CrewSelector currentCrew={currentCrew} />
+
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -148,7 +148,7 @@ export default function Home() {
             <p className="text-sm text-gray-500 mb-8">
               Welcome, {user.full_name || user.email}!
             </p>
-            
+
             <div className="flex gap-4 justify-center flex-wrap">
               <Button
                 size="lg"
@@ -207,7 +207,7 @@ export default function Home() {
                 <div className="w-10 h-10 bg-emerald-600 text-white rounded-full flex items-center justify-center text-lg font-bold mb-3">
                   1
                 </div>
-                <p className="text-sm text-gray-700">Select or create a game</p>
+                <p className="text-sm text-gray-700">Select or create a crew</p>
               </div>
               <div className="flex flex-col items-center text-center">
                 <div className="w-10 h-10 bg-emerald-600 text-white rounded-full flex items-center justify-center text-lg font-bold mb-3">

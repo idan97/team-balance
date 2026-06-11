@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { format } from "date-fns";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import GameSelector from "../components/GameSelector";
+import CrewSelector from "../components/CrewSelector";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,7 +19,7 @@ import {
 export default function Matches() {
   const [user, setUser] = useState(null);
   const queryClient = useQueryClient();
-  const selectedGameId = localStorage.getItem('selectedGameId');
+  const selectedCrewId = localStorage.getItem('selectedCrewId');
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -34,23 +34,23 @@ export default function Matches() {
     checkAuth();
   }, []);
 
-  const { data: currentGame } = useQuery({
-    queryKey: ['currentGame', selectedGameId],
+  const { data: currentCrew } = useQuery({
+    queryKey: ['currentCrew', selectedCrewId],
     queryFn: async () => {
-      if (!selectedGameId) return null;
-      const allGames = await client.entities.Game.list();
-      return allGames.find(g => g.id === selectedGameId) || null;
+      if (!selectedCrewId) return null;
+      const allCrews = await client.entities.Crew.list();
+      return allCrews.find(g => g.id === selectedCrewId) || null;
     },
-    enabled: !!selectedGameId
+    enabled: !!selectedCrewId
   });
 
   const { data: matches = [], isLoading } = useQuery({
-    queryKey: ['matches', selectedGameId],
+    queryKey: ['matches', selectedCrewId],
     queryFn: async () => {
-      if (!selectedGameId) return [];
-      return await client.entities.Match.filter({ game_id: selectedGameId }, '-created_date');
+      if (!selectedCrewId) return [];
+      return await client.entities.Match.filter({ game_id: selectedCrewId }, '-created_date');
     },
-    enabled: !!selectedGameId
+    enabled: !!selectedCrewId
   });
 
   const deleteMutation = useMutation({
@@ -73,7 +73,7 @@ export default function Matches() {
   return (
     <div className="min-h-screen p-6 md:p-8">
       <div className="max-w-7xl mx-auto">
-        <GameSelector currentGame={currentGame} />
+        <CrewSelector currentCrew={currentCrew} />
 
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -89,7 +89,7 @@ export default function Matches() {
               Create and manage your soccer matches
             </p>
           </div>
-          {selectedGameId && (
+          {selectedCrewId && (
             <Link to={createPageUrl("CreateMatch")}>
               <Button
                 className="bg-emerald-600 hover:bg-emerald-700 shadow-lg"
@@ -103,7 +103,7 @@ export default function Matches() {
         </motion.div>
 
         {/* Matches List */}
-        {selectedGameId && (
+        {selectedCrewId && (
           <>
             {isLoading ? (
               <div className="text-center py-12">

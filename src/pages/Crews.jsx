@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Trophy, Users, Calendar, Share2, Loader2, Edit, Trash2, LogIn, Star } from "lucide-react";
+import { Plus, Trophy, Users, Share2, Loader2, Edit, Trash2, LogIn, Star } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";

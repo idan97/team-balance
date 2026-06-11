@@ -42,7 +42,7 @@ const positions = [
 
 export default function Players() {
   const navigate = useNavigate();
-  const user = useAuthGuard();
+  const { user, loading: authLoading } = useAuthGuard();
   const [searchQuery, setSearchQuery] = useState("");
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({});
@@ -72,8 +72,8 @@ export default function Players() {
     queryKey: ['currentCrew', selectedCrewId],
     queryFn: async () => {
       if (!selectedCrewId) return null;
-      const allCrews = await client.entities.Crew.list();
-      return allCrews.find(g => g.id === selectedCrewId) || null;
+      const results = await client.entities.Crew.filter({ id: selectedCrewId });
+      return results[0] || null;
     },
     enabled: !!selectedCrewId
   });
@@ -213,11 +213,11 @@ const createMutation = useMutation({
     return Math.min(...priorities);
   };
 
-  const filteredPlayers = players
+  const filteredPlayers = useMemo(() => players
     .filter(player => player?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false)
     .sort((a, b) => {
       let compareA, compareB;
-      
+
       switch(sortField) {
         case 'name':
           compareA = a.name.toLowerCase();
@@ -238,11 +238,11 @@ const createMutation = useMutation({
         default:
           return 0;
       }
-      
+
       if (compareA < compareB) return sortDirection === 'asc' ? -1 : 1;
       if (compareA > compareB) return sortDirection === 'asc' ? 1 : -1;
       return 0;
-    });
+    }), [players, searchQuery, sortField, sortDirection]);
 
   const maxStars = currentCrew?.max_stars || 7;
 
@@ -301,7 +301,8 @@ const createMutation = useMutation({
     const csvContent = [
       headers.join(','),
       ...rows.map(row => row.map(cell => {
-        const cellStr = String(cell);
+        let cellStr = String(cell);
+        if (/^[=+\-@]/.test(cellStr)) cellStr = '\t' + cellStr;
         if (cellStr.includes(',') || cellStr.includes('"') || cellStr.includes('\n')) {
           return `"${cellStr.replace(/"/g, '""')}"`;
         }
@@ -321,7 +322,7 @@ const createMutation = useMutation({
     setShowExportDialog(false);
   };
 
-  if (!user) {
+  if (authLoading || !user) {
     return <div className="min-h-screen flex items-center justify-center text-lg font-medium text-gray-700">Loading...</div>;
   }
 

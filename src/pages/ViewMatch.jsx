@@ -16,7 +16,7 @@ export default function ViewMatch() {
   const queryClient = useQueryClient();
   const urlParams = new URLSearchParams(window.location.search);
   const matchId = urlParams.get('id');
-  const user = useAuthGuard();
+  const { user, loading: authLoading } = useAuthGuard();
   const [editedTeams, setEditedTeams] = useState(null);
   const [hasChanges, setHasChanges] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
@@ -142,7 +142,7 @@ export default function ViewMatch() {
     window.open(`https://wa.me/?text=${encodedMessage}`, '_blank');
   };
 
-  if (!user || isLoading) {
+  if (authLoading || !user || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">

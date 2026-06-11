@@ -3,6 +3,7 @@ import { client } from '@/api/client';
 
 export function useAuthGuard() {
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     (async () => {
@@ -12,8 +13,9 @@ export function useAuthGuard() {
         return;
       }
       setUser(await client.auth.me());
+      setLoading(false);
     })();
   }, []);
 
-  return user;
+  return { user, loading };
 }

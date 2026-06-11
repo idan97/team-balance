@@ -28,7 +28,7 @@ import {
 import { useAuthGuard } from "@/hooks/useAuthGuard";
 
 export default function Matches() {
-  const user = useAuthGuard();
+  const { user, loading: authLoading } = useAuthGuard();
   const [matchToDelete, setMatchToDelete] = useState(null);
   const queryClient = useQueryClient();
   const selectedCrewId = localStorage.getItem('selectedCrewId');
@@ -37,8 +37,8 @@ export default function Matches() {
     queryKey: ['currentCrew', selectedCrewId],
     queryFn: async () => {
       if (!selectedCrewId) return null;
-      const allCrews = await client.entities.Crew.list();
-      return allCrews.find(g => g.id === selectedCrewId) || null;
+      const results = await client.entities.Crew.filter({ id: selectedCrewId });
+      return results[0] || null;
     },
     enabled: !!selectedCrewId
   });
@@ -64,7 +64,7 @@ export default function Matches() {
 
   const handleDelete = (match) => setMatchToDelete(match);
 
-  if (!user) {
+  if (authLoading || !user) {
     return <div className="min-h-screen flex items-center justify-center text-lg text-gray-700">Loading...</div>;
   }
 

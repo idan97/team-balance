@@ -22,7 +22,7 @@ import { generateBalancedTeams } from "../components/utils/teamGeneration";
 export default function CreateMatch() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const user = useAuthGuard();
+  const { user, loading: authLoading } = useAuthGuard();
   const selectedCrewId = localStorage.getItem('selectedCrewId');
   const hasInitializedFromLastMatch = useRef(false);
   const urlParams = new URLSearchParams(window.location.search);
@@ -52,8 +52,8 @@ export default function CreateMatch() {
     queryKey: ['currentCrew', selectedCrewId],
     queryFn: async () => {
       if (!selectedCrewId) return null;
-      const allCrews = await client.entities.Crew.list();
-      return allCrews.find(g => g.id === selectedCrewId) || null;
+      const results = await client.entities.Crew.filter({ id: selectedCrewId });
+      return results[0] || null;
     },
     enabled: !!selectedCrewId
   });
@@ -245,7 +245,7 @@ export default function CreateMatch() {
 
   const requiredPlayers = teamsCount * playersPerTeam;
 
-  if (!user) {
+  if (authLoading || !user) {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-12 h-12 text-emerald-600 animate-spin" /></div>;
   }
 

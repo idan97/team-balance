@@ -24,7 +24,7 @@ import { useAuthGuard } from "@/hooks/useAuthGuard";
 
 export default function Crews() {
   const navigate = useNavigate();
-  const user = useAuthGuard();
+  const { user, loading: authLoading } = useAuthGuard();
   const [showForm, setShowForm] = useState(false);
   const [editingCrew, setEditingCrew] = useState(null);
   const [crewToDelete, setCrewToDelete] = useState(null);
@@ -156,7 +156,7 @@ export default function Crews() {
     navigate(createPageUrl("Home"));
   };
 
-  if (!user) {
+  if (authLoading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="w-12 h-12 text-emerald-600 animate-spin" />

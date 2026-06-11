@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { client } from "@/api/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, Users, Pencil, Trash2, Save, X, Star, ArrowUpDown, ArrowUp, ArrowDown, FileSpreadsheet, Download } from "lucide-react";
+import { Plus, Search, Users, Pencil, Trash2, Save, X, Star, ArrowUpDown, ArrowUp, ArrowDown, FileSpreadsheet, Download, Trophy, BarChart2 } from "lucide-react";
 import { motion } from "framer-motion";
 import CrewSelector from "../components/CrewSelector";
 import { useNavigate } from "react-router-dom";
@@ -20,6 +20,8 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import StatsCard from "@/components/home/StatsCard";
 
 const positions = [
   { value: 'goalkeeper', label: 'GK', color: 'bg-yellow-100 text-yellow-700', priority: 1 },
@@ -88,6 +90,36 @@ export default function Players() {
     },
     enabled: !!selectedCrewId
   });
+
+  const { data: matches = [] } = useQuery({
+    queryKey: ['matches', selectedCrewId],
+    queryFn: () => client.entities.Match.filter({ game_id: selectedCrewId }),
+    enabled: !!selectedCrewId,
+  });
+
+  const appearanceStats = useMemo(() => {
+    const map = {};
+    for (const match of matches) {
+      for (const team of match.generated_teams || []) {
+        for (const player of team.players || []) {
+          if (!player.name) continue;
+          if (!map[player.name]) {
+            map[player.name] = { count: 0, positions: player.positions || [], skill_rating: player.skill_rating };
+          }
+          map[player.name].count++;
+        }
+      }
+    }
+    return Object.entries(map)
+      .map(([name, v]) => ({ name, ...v }))
+      .sort((a, b) => b.count - a.count);
+  }, [matches]);
+
+  const avgPlayersPerMatch = useMemo(() => {
+    if (!matches.length) return 0;
+    const total = matches.reduce((sum, m) => sum + (m.attending_player_ids?.length || 0), 0);
+    return Math.round(total / matches.length);
+  }, [matches]);
 
   const createMutation = useMutation({
     mutationFn: (data) => client.entities.Player.create({
@@ -361,7 +393,19 @@ export default function Players() {
         </motion.div>
 
         {selectedCrewId && (
-          <>
+          <Tabs defaultValue="players">
+            <TabsList className="mb-6">
+              <TabsTrigger value="players" className="flex items-center gap-2">
+                <Users className="w-4 h-4" />
+                Players
+              </TabsTrigger>
+              <TabsTrigger value="stats" className="flex items-center gap-2">
+                <BarChart2 className="w-4 h-4" />
+                Stats
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="players">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -678,7 +722,86 @@ export default function Players() {
                 </Table>
               </div>
             </div>
-          </>
+            </TabsContent>
+
+            <TabsContent value="stats">
+              <div className="space-y-6">
+                {/* Summary cards */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <StatsCard
+                    icon={Trophy}
+                    title="Total Matches"
+                    value={String(matches.length)}
+                    subtitle="in this crew"
+                    color="text-emerald-600"
+                    delay={0}
+                  />
+                  <StatsCard
+                    icon={Users}
+                    title="Most Appearances"
+                    value={appearanceStats[0]?.count ? String(appearanceStats[0].count) : '—'}
+                    subtitle={appearanceStats[0]?.name || 'No data yet'}
+                    color="text-yellow-500"
+                    delay={0.1}
+                  />
+                  <StatsCard
+                    icon={BarChart2}
+                    title="Avg Players / Match"
+                    value={avgPlayersPerMatch ? String(avgPlayersPerMatch) : '—'}
+                    subtitle="attending per session"
+                    color="text-blue-600"
+                    delay={0.2}
+                  />
+                </div>
+
+                {/* Leaderboard */}
+                <div className="bg-white rounded-lg border-2 border-gray-200 shadow-lg overflow-hidden">
+                  <div className="px-6 py-4 bg-emerald-50 border-b border-gray-200">
+                    <h2 className="font-bold text-lg text-gray-900">Appearances Leaderboard</h2>
+                    <p className="text-sm text-gray-500">Based on {matches.length} matches</p>
+                  </div>
+                  {appearanceStats.length === 0 ? (
+                    <div className="text-center py-16">
+                      <BarChart2 className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                      <h3 className="text-xl font-semibold text-gray-900 mb-2">No stats yet</h3>
+                      <p className="text-gray-500">Create matches and generate teams to start tracking appearances.</p>
+                    </div>
+                  ) : (
+                    <div className="divide-y divide-gray-100">
+                      {appearanceStats.map((player, idx) => {
+                        const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : null;
+                        return (
+                          <div key={player.name} className="flex items-center gap-4 px-6 py-3 hover:bg-emerald-50 transition-colors">
+                            <div className="w-8 text-center font-bold text-gray-400 text-sm">
+                              {medal || `#${idx + 1}`}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <span className="font-semibold text-gray-900 truncate block">{player.name}</span>
+                              <div className="flex flex-wrap gap-1 mt-0.5">
+                                {(player.positions || []).map(pos => {
+                                  const posData = positions.find(p => p.value === pos);
+                                  return posData ? (
+                                    <Badge key={pos} className={`${posData.color} text-xs py-0`}>{posData.label}</Badge>
+                                  ) : null;
+                                })}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-1 shrink-0">
+                              {player.skill_rating != null && renderStars(player.skill_rating, maxStars)}
+                            </div>
+                            <div className="flex items-center gap-1.5 shrink-0 bg-emerald-100 text-emerald-800 font-bold px-3 py-1 rounded-full text-sm min-w-[3.5rem] justify-center">
+                              <Users className="w-3.5 h-3.5" />
+                              {player.count}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
         )}
 
         <Dialog open={showExportDialog} onOpenChange={setShowExportDialog}>

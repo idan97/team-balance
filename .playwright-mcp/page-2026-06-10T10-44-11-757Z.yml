@@ -1,7 +1,0 @@
-- generic [ref=e4]:
-  - img [ref=e6]
-  - heading "Team Balancer" [level=1] [ref=e12]
-  - paragraph [ref=e13]: Fair matches, every time
-  - button "Continue with Google" [ref=e14] [cursor=pointer]:
-    - img
-    - text: Continue with Google
